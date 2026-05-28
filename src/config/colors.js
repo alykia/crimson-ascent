@@ -1,0 +1,19 @@
+// Graybox palette per DevPlanCrim.md.
+// Hex 0xRRGGBB values fed straight to Three.js materials.
+export const COLORS = Object.freeze({
+  BACKGROUND:         0x0a0a0c,
+  PLATFORM:           0x3a3a40, // dark gray
+  WALL:               0x2a2a30, // slightly darker gray
+  PLAYER:             0xe0e0e0,
+  PLAYER_DASHING:     0xffd54a,
+  PLAYER_IFRAME:      0xff80a0,
+  HAZARD:             0xc62828, // red
+  HAZARD_WARNING:     0xffa040,
+  ENEMY:              0xeeeeee, // white
+  ENEMY_WEAKENED:     0xf0a0a0, // pale red
+  CHECKPOINT:         0x2a5577,
+  CHECKPOINT_ACTIVE:  0x60d0ff, // glowing blue
+  ARROW_PICKUP:       0xffd54a, // yellow
+  ARROW:              0xffe082,
+  DEBUG_HITBOX:       0x00ff88,
+});

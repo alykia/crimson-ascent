@@ -1,0 +1,276 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #0a0a0c;
+  color: #cdd;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #0a0a0c;
+}
+
+#ui-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+#debug-overlay {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #b8e0ff;
+  font: 12px/1.35 ui-monospace, Menlo, Consolas, monospace;
+  border: 1px solid #1f2530;
+  border-radius: 4px;
+  white-space: pre;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#hud {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.hud-hearts {
+  display: flex;
+  gap: 4px;
+}
+
+.hud-heart {
+  width: 14px;
+  height: 14px;
+  background: #c62828;
+  border: 1px solid #441010;
+  border-radius: 2px;
+}
+
+.hud-heart.empty {
+  background: transparent;
+  border-color: #4a2020;
+}
+
+.hud-arrows {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid #2a2a30;
+  border-radius: 3px;
+  font: 12px ui-monospace, Menlo, Consolas, monospace;
+  color: #ffd54a;
+}
+
+#mobile-controls {
+  position: absolute;
+  inset: 0;
+  display: none;
+  pointer-events: none;
+}
+
+#mobile-controls.visible {
+  display: block;
+}
+
+.mc-stick {
+  position: absolute;
+  left: 18px;
+  bottom: 24px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(50, 50, 60, 0.35);
+  border: 2px solid rgba(180, 200, 230, 0.35);
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.mc-stick-knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 50px;
+  height: 50px;
+  margin: -25px 0 0 -25px;
+  border-radius: 50%;
+  background: rgba(184, 224, 255, 0.45);
+  border: 2px solid rgba(220, 240, 255, 0.7);
+  pointer-events: none;
+}
+
+.mc-buttons {
+  position: absolute;
+  right: 18px;
+  bottom: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, 70px);
+  grid-template-rows: repeat(2, 70px);
+  gap: 10px;
+  pointer-events: none;
+}
+
+.mc-btn {
+  border-radius: 50%;
+  background: rgba(50, 50, 60, 0.45);
+  border: 2px solid rgba(180, 200, 230, 0.5);
+  color: #dfeaff;
+  font: 600 13px ui-monospace, Menlo, Consolas, monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.mc-btn:active,
+.mc-btn.pressed {
+  background: rgba(120, 160, 200, 0.55);
+  border-color: rgba(220, 240, 255, 0.85);
+}
+
+.mc-btn.mc-jump  { grid-column: 2; grid-row: 2; }
+.mc-btn.mc-dash  { grid-column: 1; grid-row: 2; }
+.mc-btn.mc-shoot { grid-column: 2; grid-row: 1; }
+
+#title-menu {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  background: linear-gradient(to bottom, rgba(5, 6, 9, 0.78), rgba(5, 6, 9, 0.9));
+}
+
+.menu-panel {
+  width: min(90vw, 440px);
+  padding: 28px 26px;
+  border: 1px solid #2f3a48;
+  border-radius: 10px;
+  background: rgba(12, 14, 20, 0.95);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.35);
+}
+
+.menu-title {
+  margin: 0 0 10px;
+  color: #e8efff;
+  font-size: 34px;
+  line-height: 1.1;
+}
+
+.menu-subtitle {
+  margin: 0 0 18px;
+  color: #9db0c9;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.menu-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px 13px;
+  border: 1px solid #3b4a5d;
+  border-radius: 8px;
+  background: #1b2230;
+  color: #dce9ff;
+  font: 600 14px ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  cursor: pointer;
+}
+
+.menu-btn:hover {
+  background: #243149;
+}
+
+#debug-menu {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: min(340px, calc(100vw - 24px));
+  padding: 10px 10px 12px;
+  border: 1px solid #3c4a59;
+  border-radius: 8px;
+  background: rgba(11, 16, 22, 0.92);
+  color: #d4e7ff;
+  z-index: 18;
+  pointer-events: auto;
+}
+
+.debug-menu-title {
+  font: 700 13px ui-monospace, Menlo, Consolas, monospace;
+  margin-bottom: 6px;
+}
+
+.debug-menu-subtitle {
+  margin-top: 8px;
+  margin-bottom: 5px;
+  font: 700 11px ui-monospace, Menlo, Consolas, monospace;
+  color: #8fb6dc;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.debug-menu-info {
+  margin-bottom: 8px;
+  white-space: pre;
+  color: #9fb1c9;
+  font: 11px/1.4 ui-monospace, Menlo, Consolas, monospace;
+}
+
+.debug-menu-btn {
+  width: 100%;
+  margin-top: 6px;
+  padding: 7px 9px;
+  border: 1px solid #40566f;
+  border-radius: 6px;
+  background: #182434;
+  color: #d8e8ff;
+  font: 600 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  cursor: pointer;
+}
+
+.debug-menu-btn:hover {
+  background: #20324a;
+}
+
+.debug-menu-anchor-wrap {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.debug-menu-anchor-btn {
+  margin-top: 0;
+  padding: 6px 6px;
+  font-size: 11px;
+}
