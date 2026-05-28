@@ -4,6 +4,8 @@
 
 > "Climb. Die. Climb again, cleaner."
 
+**Play it:** https://alykia.github.io/crimson-ascent/
+
 ## Quick start
 
 ```bash
@@ -55,8 +57,9 @@ CrimsonAscent/
 ```bash
 npm run build        # outputs dist/
 npm run preview      # serve dist/ locally
-npm run deploy       # publishes dist/ to gh-pages branch
 ```
+
+Deploys are automatic: every push to `main` triggers `.github/workflows/deploy.yml`, which builds the site and publishes it to GitHub Pages. You can also run the workflow manually from the Actions tab.
 
 ## Development phases
 
