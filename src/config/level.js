@@ -25,7 +25,7 @@ export const LEVEL = {
   spawn: { x: 0, y: 2 },
   objects: [
     // ---- Global bounds ----
-    { type: 'platform', x: 0, y: FLOOR_Y, w: 24, h: 1 },
+    { type: 'platform', x: 0, y: FLOOR_Y, w: 24, h: 1, spriteVariant: 'groundfloor' },
     { type: 'wall', x: LEFT_X,  y: LEVEL_TOP / 2, w: 1, h: LEVEL_TOP },
     { type: 'wall', x: RIGHT_X, y: LEVEL_TOP / 2, w: 1, h: LEVEL_TOP },
     // =============================================================
@@ -60,11 +60,11 @@ export const LEVEL = {
     { type: 'platform', x: 0, y: 16.5, w: 3, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
     { type: 'walker',   x: 0, y: 17.5, dir: 1 },
     // Wide gap → dash to clear
-    { type: 'platform', x:  8, y: 17.5, w: 2.5, h: 0.5, spriteVariant: 'platform2' },
+    { type: 'platform', x:  8, y: 17.5, w: 2.9, h: 0.5, spriteVariant: 'platform2' },
     // Side assists: optional bailout ledges that smooth failed lines without
     // trivializing the climb.
-    { type: 'platform', x: -7.2, y: 18.0, w: 2.0, h: 0.5, spriteVariant: 'platform3' },
-    { type: 'platform', x:  6.8, y: 20.0, w: 2.0, h: 0.5, spriteVariant: 'platform2' },
+    { type: 'platform', x: -7.2, y: 18.0, w: 2.3, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'platform', x:  6.8, y: 20.0, w: 2.3, h: 0.5, spriteVariant: 'platform2' },
     // Step up
     { type: 'platform', x: -3, y: 19.5, w: 3,   h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
     { type: 'platform', x:  3, y: 21.5, w: 4,   h: 0.5, spriteVariant: 'platform1' },
@@ -78,7 +78,7 @@ export const LEVEL = {
     { type: 'platform', x: 3, y: 23.5, w: 5, h: 0.5, spriteVariant: 'platform1' },
     { type: 'arrowPickup', x: 2, y: 24.5, amount: 3 },
     // Archer perch
-    { type: 'platform', x:  6, y: 25.5, w: 2.5, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
+    { type: 'platform', x:  6, y: 25.5, w: 2.9, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
     { type: 'archer',   x:  6, y: 26.5, dir: -1 },
     // Flyer blocks the route up
     { type: 'flyer',    x: -1, y: 27.5, range: 3 },
@@ -93,13 +93,13 @@ export const LEVEL = {
     // Zig-zag stepping platforms with spikes above. Trigger zones reach
     // down to the platforms so the player commits and keeps moving.
     // =============================================================
-    { type: 'platform', x: -3, y: 32, w: 2.5, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
+    { type: 'platform', x: -3, y: 32, w: 2.9, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
     { type: 'spike',    x: -3, y: 37, w: 1, h: 1, triggerH: 5 },
 
-    { type: 'platform', x:  3, y: 34, w: 2.5, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'platform', x:  3, y: 34, w: 2.9, h: 0.5, spriteVariant: 'platform3' },
     { type: 'spike',    x:  3, y: 39, w: 1, h: 1, triggerH: 5 },
 
-    { type: 'platform', x: -3, y: 36, w: 2.5, h: 0.5, spriteVariant: 'platform2' },
+    { type: 'platform', x: -3, y: 36, w: 2.9, h: 0.5, spriteVariant: 'platform2' },
     { type: 'spike',    x: -3, y: 41, w: 1, h: 1, triggerH: 5 },
 
     // Safe top landing offset from any spike column

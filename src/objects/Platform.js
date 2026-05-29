@@ -3,10 +3,12 @@ import { COLORS } from '../config/colors.js';
 import platform1SpriteUrl from '../assets/T_Platform1Sprite.png';
 import platform2SpriteUrl from '../assets/T_Platform2_Sprite.png';
 import platform3SpriteUrl from '../assets/T_Platform3_Sprite.png';
+import groundfloorSpriteUrl from '../assets/T_Groundfloor_Sprite.png';
 
 let platform1Texture = null;
 let platform2Texture = null;
 let platform3Texture = null;
+let groundfloorTexture = null;
 
 function getPlatform1Texture() {
   if (platform1Texture) return platform1Texture;
@@ -35,6 +37,22 @@ function getPlatform3Texture() {
   return platform3Texture;
 }
 
+function getGroundfloorTexture() {
+  if (groundfloorTexture) return groundfloorTexture;
+  groundfloorTexture = new THREE.TextureLoader().load(groundfloorSpriteUrl);
+  groundfloorTexture.magFilter = THREE.NearestFilter;
+  groundfloorTexture.minFilter = THREE.NearestFilter;
+  groundfloorTexture.colorSpace = THREE.SRGBColorSpace;
+  groundfloorTexture.wrapS = THREE.ClampToEdgeWrapping;
+  groundfloorTexture.wrapT = THREE.ClampToEdgeWrapping;
+  // Sprite file is 800x800 but visible art sits in a 800x243 band.
+  // Crop transparent top/bottom margins so world scaling stays predictable.
+  groundfloorTexture.repeat.set(1, 243 / 800);
+  groundfloorTexture.offset.set(0, 330 / 800);
+  groundfloorTexture.needsUpdate = true;
+  return groundfloorTexture;
+}
+
 const PLATFORM1_WIDTH_MULT = 0.75;
 const PLATFORM1_MIN_SIZE = 2.8;
 const PLATFORM1_MAX_SIZE = 6.0;
@@ -55,6 +73,14 @@ const PLATFORM3_MAX_SIZE = 5.2;
 const PLATFORM3_SURFACE_Y_NORM = 0.56;
 const PLATFORM3_SURFACE_W_NORM = 0.68;
 
+const GROUNDFLOOR_WIDTH_MULT = 1.02;
+const GROUNDFLOOR_MIN_SIZE = 20.0;
+const GROUNDFLOOR_MAX_SIZE = 30.0;
+const GROUNDFLOOR_ASPECT = 800 / 243;
+const GROUNDFLOOR_MAX_HEIGHT = 4.2;
+const GROUNDFLOOR_SURFACE_Y_NORM = 0.41;
+const GROUNDFLOOR_SURFACE_W_NORM = 0.96;
+
 export class Platform {
   constructor({ x, y, w, h, spriteVariant = null, spriteFlipX = false }) {
     this.tag = 'platform';
@@ -63,7 +89,12 @@ export class Platform {
     this.mesh = new THREE.Group();
     this.mesh.position.set(x, y, 0);
 
-    if (spriteVariant === 'platform1' || spriteVariant === 'platform2' || spriteVariant === 'platform3') {
+    if (
+      spriteVariant === 'platform1' ||
+      spriteVariant === 'platform2' ||
+      spriteVariant === 'platform3' ||
+      spriteVariant === 'groundfloor'
+    ) {
       const spriteParams = {
         platform1: {
           texture: getPlatform1Texture(),
@@ -89,6 +120,16 @@ export class Platform {
           surfaceNorm: PLATFORM3_SURFACE_Y_NORM,
           surfaceWidthNorm: PLATFORM3_SURFACE_W_NORM,
         },
+        groundfloor: {
+          texture: getGroundfloorTexture(),
+          widthMult: GROUNDFLOOR_WIDTH_MULT,
+          minSize: GROUNDFLOOR_MIN_SIZE,
+          maxSize: GROUNDFLOOR_MAX_SIZE,
+          aspect: GROUNDFLOOR_ASPECT,
+          maxHeight: GROUNDFLOOR_MAX_HEIGHT,
+          surfaceNorm: GROUNDFLOOR_SURFACE_Y_NORM,
+          surfaceWidthNorm: GROUNDFLOOR_SURFACE_W_NORM,
+        },
       }[spriteVariant];
       const mat = new THREE.SpriteMaterial({
         map: spriteParams.texture,
@@ -97,20 +138,23 @@ export class Platform {
         depthWrite: false,
       });
       const sprite = new THREE.Sprite(mat);
-      const visualSize = Math.min(
+      const visualWidth = Math.min(
         spriteParams.maxSize,
         Math.max(w * spriteParams.widthMult, spriteParams.minSize)
       );
+      const visualHeight = spriteParams.aspect
+        ? Math.min(spriteParams.maxHeight, visualWidth / spriteParams.aspect)
+        : visualWidth;
       const topY = h / 2;
-      const surfaceOffsetY = (0.5 - spriteParams.surfaceNorm) * visualSize;
+      const surfaceOffsetY = (0.5 - spriteParams.surfaceNorm) * visualHeight;
       const flip = spriteFlipX ? -1 : 1;
-      sprite.scale.set(visualSize * flip, visualSize, 1);
+      sprite.scale.set(visualWidth * flip, visualHeight, 1);
       sprite.position.set(0, topY + surfaceOffsetY, 0.02);
       this.mesh.add(sprite);
 
       // Match gameplay collision width to visible platform top deck width.
       // Keep height from authored data so jumps/landing feel consistent.
-      this.aabb.w = Math.min(w, visualSize * spriteParams.surfaceWidthNorm);
+      this.aabb.w = Math.min(w, visualWidth * spriteParams.surfaceWidthNorm);
 
       this._material = mat;
       return;
