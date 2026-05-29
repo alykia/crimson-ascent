@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { COLORS } from '../config/colors.js';
 import { PLAYER } from '../config/constants.js';
 import { Physics } from '../systems/Physics.js';
-import arrowSpriteUrl from '../assets/T_arrow_sprite.png';
+import arrowSpriteUrl from '../assets/T_ArrowShoot_Sprite.png';
 
 let arrowTexture = null;
 

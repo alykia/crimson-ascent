@@ -91,6 +91,18 @@ html, body {
   color: #ffd54a;
 }
 
+.hud-arrows-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  image-rendering: pixelated;
+}
+
+.hud-arrows-text {
+  line-height: 1;
+  font-size: 14px;
+}
+
 #mobile-controls {
   position: absolute;
   inset: 0;

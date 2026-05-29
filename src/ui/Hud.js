@@ -1,5 +1,7 @@
 // DOM HUD: hearts (top-right) and arrow ammo. Plain divs styled via style.css
 // so we don't burn GPU time on overlay text inside the WebGL canvas.
+import arrowSpriteUrl from '../assets/T_arrow_sprite.png';
+
 export class Hud {
   constructor(uiRoot) {
     this.el = document.createElement('div');
@@ -11,7 +13,17 @@ export class Hud {
 
     this.arrowsEl = document.createElement('div');
     this.arrowsEl.className = 'hud-arrows';
-    this.arrowsEl.textContent = 'arrows 0/0';
+    this.arrowsIconEl = document.createElement('img');
+    this.arrowsIconEl.className = 'hud-arrows-icon';
+    this.arrowsIconEl.src = arrowSpriteUrl;
+    this.arrowsIconEl.alt = 'Arrows';
+    this.arrowsIconEl.draggable = false;
+    this.arrowsEl.appendChild(this.arrowsIconEl);
+
+    this.arrowsTextEl = document.createElement('span');
+    this.arrowsTextEl.className = 'hud-arrows-text';
+    this.arrowsTextEl.textContent = '0/0';
+    this.arrowsEl.appendChild(this.arrowsTextEl);
     this.el.appendChild(this.arrowsEl);
 
     uiRoot.appendChild(this.el);
@@ -32,7 +44,7 @@ export class Hud {
       this._lastMaxHp = p.maxHp;
     }
     if (p.ammo !== this._lastAmmo || p.maxAmmo !== this._lastMaxAmmo) {
-      this.arrowsEl.textContent = `arrows ${p.ammo}/${p.maxAmmo}`;
+      this.arrowsTextEl.textContent = `${p.ammo}/${p.maxAmmo}`;
       this._lastAmmo = p.ammo;
       this._lastMaxAmmo = p.maxAmmo;
     }
