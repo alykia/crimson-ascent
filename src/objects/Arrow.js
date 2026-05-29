@@ -2,6 +2,19 @@ import * as THREE from 'three';
 import { COLORS } from '../config/colors.js';
 import { PLAYER } from '../config/constants.js';
 import { Physics } from '../systems/Physics.js';
+import arrowSpriteUrl from '../assets/T_arrow_sprite.png';
+
+let arrowTexture = null;
+
+function getArrowTexture() {
+  if (arrowTexture) return arrowTexture;
+  arrowTexture = new THREE.TextureLoader().load(arrowSpriteUrl);
+  // Keep pixel-art edges crisp.
+  arrowTexture.magFilter = THREE.NearestFilter;
+  arrowTexture.minFilter = THREE.NearestFilter;
+  arrowTexture.colorSpace = THREE.SRGBColorSpace;
+  return arrowTexture;
+}
 
 // Projectile shared by player and enemies. `source` is 'player' or 'enemy'.
 //   - 'player' arrows weaken the first enemy they touch
@@ -17,10 +30,17 @@ export class Arrow {
     this._lifeMs = PLAYER.ARROW_LIFETIME_MS;
 
     const color = source === 'player' ? COLORS.ARROW : COLORS.HAZARD;
-    const geo = new THREE.BoxGeometry(this.aabb.w, this.aabb.h, 0.3);
-    const mat = new THREE.MeshBasicMaterial({ color });
-    this.mesh = new THREE.Mesh(geo, mat);
+    this._material = new THREE.SpriteMaterial({
+      map: getArrowTexture(),
+      color,
+      transparent: true,
+      alphaTest: 0.1,
+      depthWrite: false,
+    });
+    this.mesh = new THREE.Sprite(this._material);
+    this.mesh.scale.set(1.0, 0.32, 1);
     this.mesh.position.set(x, y, 0.45);
+    this._material.rotation = Math.atan2(vy, vx);
   }
 
   update(dt, game) {
@@ -61,5 +81,9 @@ export class Arrow {
 
     this.mesh.position.x = this.aabb.x;
     this.mesh.position.y = this.aabb.y;
+  }
+
+  onRemoved() {
+    this._material?.dispose();
   }
 }

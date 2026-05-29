@@ -1,0 +1,30 @@
+---
+description: Always commit and push code changes after task completion
+alwaysApply: true
+---
+
+# Git Ship After Work
+
+For this project, every write task must end with a GitHub sync unless a higher-priority system constraint prevents it.
+
+## Required behavior
+
+- If files changed, finish by committing and pushing before ending the task.
+- If no files changed (read-only task), state that no commit/push is needed.
+- Never include secrets, credentials, or `.env`-style files in commits.
+
+## End-of-task workflow
+
+1. Run relevant checks for the changed area (tests, build, lint, or targeted validation).
+2. Inspect changes with `git status` and `git diff`.
+3. Stage intended files only.
+4. Create a clear commit message that explains intent.
+5. Sync safely with remote (`git pull --rebase origin <current-branch>` when needed).
+6. Push (`git push origin HEAD`).
+7. Report branch name and new commit SHA in the final response.
+
+## If push cannot complete
+
+- Treat "cannot push" as incomplete work.
+- Try to self-resolve common issues (rebase conflicts, unstaged conflict markers, non-fast-forward).
+- If still blocked (auth, permissions, branch protection, network), report the blocker and exact next command for the user.

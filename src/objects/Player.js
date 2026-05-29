@@ -3,6 +3,8 @@ import { COLORS } from '../config/colors.js';
 import { PLAYER, WORLD } from '../config/constants.js';
 import { Ghost } from './Ghost.js';
 import { Arrow } from './Arrow.js';
+import idleFrame0Url from '../assets/T_CharacterChibi_Idle00.png';
+import idleFrame1Url from '../assets/T_CharacterChibi_Idle01.png';
 
 // Kinematic AABB driven by handmade physics. Phase 2 implements:
 //   - horizontal accel/decel with separate air values
@@ -61,9 +63,36 @@ export class Player {
     this.ammo = PLAYER.ARROW_AMMO_START;
     this.maxAmmo = PLAYER.ARROW_AMMO_MAX;
 
-    const geo = new THREE.BoxGeometry(this.aabb.w, this.aabb.h, 0.5);
-    this._mat = new THREE.MeshBasicMaterial({ color: COLORS.PLAYER });
+    if (!Player._idleTextures) {
+      const loader = new THREE.TextureLoader();
+      Player._idleTextures = [idleFrame0Url, idleFrame1Url].map((url) => {
+        const tex = loader.load(url);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.wrapS = THREE.ClampToEdgeWrapping;
+        tex.wrapT = THREE.ClampToEdgeWrapping;
+        tex.magFilter = THREE.LinearFilter;
+        tex.minFilter = THREE.LinearFilter;
+        return tex;
+      });
+    }
+
+    this._idleTextures = Player._idleTextures;
+    this._idleFrameIndex = 0;
+    this._idleFrameTimerMs = 0;
+    this._idleFrameDurationMs = 240;
+    this._visualScaleX = 1.38;
+    this._visualScaleY = 1.18;
+    this._visualYOffset = ((this._visualScaleY - 1) * this.aabb.h) / 2;
+
+    const geo = new THREE.PlaneGeometry(this.aabb.w, this.aabb.h);
+    this._mat = new THREE.MeshBasicMaterial({
+      map: this._idleTextures[0],
+      color: COLORS.PLAYER,
+      transparent: true,
+      alphaTest: 0.02,
+    });
     this.mesh = new THREE.Mesh(geo, this._mat);
+    this.mesh.scale.set(this._visualScaleX, this._visualScaleY, 1);
     this.mesh.position.set(x, y, 0.5);
   }
 
@@ -248,6 +277,7 @@ export class Player {
     }
 
     this._updateTint();
+    this._updateIdleAnimation(dtMs);
     this._syncMesh();
   }
 
@@ -266,7 +296,19 @@ export class Player {
       240,
       0.55
     );
+    ghost.mesh.scale.copy(this.mesh.scale);
     game.entities.add(ghost);
+  }
+
+  _updateIdleAnimation(dtMs) {
+    if (!this._idleTextures || this._idleTextures.length < 2) return;
+    this._idleFrameTimerMs += dtMs;
+    while (this._idleFrameTimerMs >= this._idleFrameDurationMs) {
+      this._idleFrameTimerMs -= this._idleFrameDurationMs;
+      this._idleFrameIndex = (this._idleFrameIndex + 1) % this._idleTextures.length;
+      this._mat.map = this._idleTextures[this._idleFrameIndex];
+      this._mat.needsUpdate = true;
+    }
   }
 
   _probeWall(physics, dir) {
@@ -282,7 +324,7 @@ export class Player {
 
   _syncMesh() {
     this.mesh.position.x = this.aabb.x;
-    this.mesh.position.y = this.aabb.y;
+    this.mesh.position.y = this.aabb.y + this._visualYOffset;
   }
 
   // Fires a player arrow if ammo > 0 and not mid-dash. Aim:

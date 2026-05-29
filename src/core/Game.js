@@ -21,6 +21,7 @@ import { ArrowPickup } from '../objects/Pickup.js';
 import { FallingSpike } from '../objects/Hazard.js';
 import { Checkpoint } from '../objects/Checkpoint.js';
 import { LabelSign } from '../objects/LabelSign.js';
+import { LevelBackground } from '../objects/LevelBackground.js';
 import { getLevelById } from '../config/levels.js';
 import { readRuntimeFlags } from '../config/runtimeFlags.js';
 import { WORLD, PLAYER } from '../config/constants.js';
@@ -91,6 +92,8 @@ export class Game {
   _loadLevel(level) {
     this.entities.clear();
     this.checkpoints.setSpawn(level.spawn.x, level.spawn.y);
+    const levelBounds = this._deriveLevelBounds(level);
+    this.entities.add(new LevelBackground({ bounds: levelBounds }));
     for (const obj of level.objects) {
       switch (obj.type) {
         case 'platform': this.entities.add(new Platform(obj)); break;
@@ -110,6 +113,35 @@ export class Game {
     this.player.godMode = !!this.debugFlags.godMode;
     this.entities.add(this.player);
     this.cameraFollow.setTarget(this.player);
+  }
+
+  _deriveLevelBounds(level) {
+    let minX = Number.POSITIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+
+    for (const obj of level.objects || []) {
+      if (typeof obj.x !== 'number' || typeof obj.y !== 'number') continue;
+      if (typeof obj.w !== 'number' || typeof obj.h !== 'number') continue;
+      minX = Math.min(minX, obj.x - obj.w / 2);
+      maxX = Math.max(maxX, obj.x + obj.w / 2);
+      minY = Math.min(minY, obj.y - obj.h / 2);
+      maxY = Math.max(maxY, obj.y + obj.h / 2);
+    }
+
+    if (!Number.isFinite(minX) || !Number.isFinite(minY)) {
+      return { minX: -18, maxX: 18, minY: -2, maxY: 52 };
+    }
+
+    const padX = 0.5;
+    const padY = 0.5;
+    return {
+      minX: minX - padX,
+      maxX: maxX + padX,
+      minY: minY - padY,
+      maxY: maxY + padY,
+    };
   }
 
   _gotoTitle() {

@@ -1,17 +1,17 @@
 import * as THREE from 'three';
 import { Physics } from '../systems/Physics.js';
-import potionSpriteUrl from '../assets/T_PotionSprite.png';
+import arrowSpriteUrl from '../assets/T_arrow_sprite.png';
 
-let potionTexture = null;
+let arrowTexture = null;
 
-function getPotionTexture() {
-  if (potionTexture) return potionTexture;
-  potionTexture = new THREE.TextureLoader().load(potionSpriteUrl);
+function getArrowTexture() {
+  if (arrowTexture) return arrowTexture;
+  arrowTexture = new THREE.TextureLoader().load(arrowSpriteUrl);
   // Pixel-art friendly filtering to keep the sprite crisp.
-  potionTexture.magFilter = THREE.NearestFilter;
-  potionTexture.minFilter = THREE.NearestFilter;
-  potionTexture.colorSpace = THREE.SRGBColorSpace;
-  return potionTexture;
+  arrowTexture.magFilter = THREE.NearestFilter;
+  arrowTexture.minFilter = THREE.NearestFilter;
+  arrowTexture.colorSpace = THREE.SRGBColorSpace;
+  return arrowTexture;
 }
 
 // Yellow ammo pickup. Bobs subtly for readability. Consumed on player overlap;
@@ -25,7 +25,7 @@ export class ArrowPickup {
     this.aabb = { x: opts.x, y: opts.y, w: 0.55, h: 0.55 };
 
     this._material = new THREE.SpriteMaterial({
-      map: getPotionTexture(),
+      map: getArrowTexture(),
       transparent: true,
       alphaTest: 0.1,
       depthWrite: false,

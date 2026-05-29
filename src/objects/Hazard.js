@@ -2,11 +2,23 @@ import * as THREE from 'three';
 import { COLORS } from '../config/colors.js';
 import { HAZARD } from '../config/constants.js';
 import { Physics } from '../systems/Physics.js';
+import fallingSpikeSpriteUrl from '../assets/T_FallingSpikes_Sprite.png';
 
 // FallingSpike — sits in place, watches a trigger zone below it, drops on
 // entry after a brief warning blink, then resets after SPIKE_RESET_MS.
 // Deals damage on contact in WARNING (no), FALLING, and SPENT states.
 const STATE = { IDLE: 0, WARNING: 1, FALLING: 2, SPENT: 3 };
+
+let fallingSpikeTexture = null;
+
+function getFallingSpikeTexture() {
+  if (fallingSpikeTexture) return fallingSpikeTexture;
+  fallingSpikeTexture = new THREE.TextureLoader().load(fallingSpikeSpriteUrl);
+  fallingSpikeTexture.magFilter = THREE.NearestFilter;
+  fallingSpikeTexture.minFilter = THREE.NearestFilter;
+  fallingSpikeTexture.colorSpace = THREE.SRGBColorSpace;
+  return fallingSpikeTexture;
+}
 
 export class FallingSpike {
   constructor({ x, y, w = 1, h = 1, triggerH = 6 }) {
@@ -20,9 +32,15 @@ export class FallingSpike {
     this._state = STATE.IDLE;
     this._timer = 0;
 
-    const geo = new THREE.BoxGeometry(w, h, 0.5);
-    this._mat = new THREE.MeshBasicMaterial({ color: COLORS.HAZARD });
-    this.mesh = new THREE.Mesh(geo, this._mat);
+    this._mat = new THREE.SpriteMaterial({
+      map: getFallingSpikeTexture(),
+      color: 0xffffff,
+      transparent: true,
+      alphaTest: 0.08,
+      depthWrite: false,
+    });
+    this.mesh = new THREE.Sprite(this._mat);
+    this.mesh.scale.set(w * 2.2, h * 2.2, 1);
     this.mesh.position.set(x, y, 0.3);
   }
 
@@ -49,11 +67,11 @@ export class FallingSpike {
         this._timer -= dtMs;
         // Blink: square wave every 80ms.
         const blink = (Math.floor(this._timer / 80) & 1) === 0;
-        this._mat.color.setHex(blink ? COLORS.HAZARD_WARNING : COLORS.HAZARD);
+        this._mat.color.setHex(blink ? COLORS.HAZARD_WARNING : 0xffffff);
         if (this._timer <= 0) {
           this._state = STATE.FALLING;
           this.vel.y = 0;
-          this._mat.color.setHex(COLORS.HAZARD);
+          this._mat.color.setHex(0xffffff);
         }
         break;
       }
@@ -95,7 +113,7 @@ export class FallingSpike {
     this.vel.y = 0;
     this._state = STATE.IDLE;
     this._timer = 0;
-    this._mat.color.setHex(COLORS.HAZARD);
+    this._mat.color.setHex(0xffffff);
   }
 
   onPlayerRespawn() {
@@ -106,5 +124,9 @@ export class FallingSpike {
   _syncMesh() {
     this.mesh.position.x = this.aabb.x;
     this.mesh.position.y = this.aabb.y;
+  }
+
+  onRemoved() {
+    this._mat?.dispose();
   }
 }
