@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import backgroundLevel1Url from '../assets/T_BackgroundLevel1_Sprite.png';
+import backgroundLevel1Url from '../assets/T_Background1_Sprite.png';
 
 let backgroundTexture = null;
 
@@ -24,7 +24,7 @@ export class LevelBackground {
     this.tag = 'background';
     this.solid = false;
 
-    this._aspect = 704 / 1024;
+    this._aspect = 941 / 1672;
     this._parallaxY = parallaxY;
     this._parallaxX = parallaxX;
     this._bounds = bounds || { minX: -18, maxX: 18, minY: -2, maxY: 52 };
