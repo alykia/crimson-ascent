@@ -6,12 +6,10 @@ import { EntityManager } from '../systems/EntityManager.js';
 import { Physics } from '../systems/Physics.js';
 import { CameraFollow } from '../systems/CameraFollow.js';
 import { CheckpointSystem } from '../systems/CheckpointSystem.js';
-import { DebugOverlay } from '../systems/DebugOverlay.js';
 import { Hud } from '../ui/Hud.js';
 import { MobileControls } from '../ui/MobileControls.js';
 import { MenuTitle } from '../ui/MenuTitle.js';
 import { TutorialPopup } from '../ui/TutorialPopup.js';
-import { DebugMenu } from '../ui/DebugMenu.js';
 import { Platform } from '../objects/Platform.js';
 import { Wall } from '../objects/Wall.js';
 import { Player } from '../objects/Player.js';
@@ -47,7 +45,6 @@ export class Game {
     this.checkpoints = new CheckpointSystem();
     this.hud = new Hud(uiRoot);
     this.mobile = new MobileControls(uiRoot, this.input);
-    this.debug = new DebugOverlay(uiRoot);
     this.runtimeFlags = readRuntimeFlags();
 
     this.player = null;
@@ -61,9 +58,7 @@ export class Game {
     // (the world freezes). Set via freezePhysics(ms) — used by dash impact.
     this._freezeMs = 0;
 
-    this.input.on('toggleDebug', () => this.debug.toggle());
     this.input.on('restart', () => this._handleRestart());
-    this.input.on('toggleDevMenu', () => this.debugMenu.toggle());
     this.input.on('toggleGodMode', () => this.toggleGodMode());
     this.input.on('refillHp', () => this.refillHp());
     this.input.on('refillAmmo', () => this.refillAmmo());
@@ -76,15 +71,6 @@ export class Game {
       onEnterZoo: () => this.enterZoo(),
     });
     this.tutorialPopup = new TutorialPopup(uiRoot);
-
-    this.debugMenu = new DebugMenu(uiRoot, {
-      onToggleGodMode: () => this.toggleGodMode(),
-      onRefillHp: () => this.refillHp(),
-      onRefillAmmo: () => this.refillAmmo(),
-      onReloadLevel: () => this.reloadCurrentLevel(),
-      onTeleportAnchor: (id) => this.teleportToAnchor(id),
-    });
-    this.debugMenu.setAvailable(false);
 
     this.loop = new Loop(
       (dt) => this.update(dt),
@@ -156,8 +142,6 @@ export class Game {
     this.tutorialPopup.hide();
     this.hud.setVisible(false);
     this.mobile.setGameplayEnabled(false);
-    this.debugMenu.hide();
-    this.debugMenu.setAvailable(false);
   }
 
   _setLevel(levelId) {
@@ -170,12 +154,6 @@ export class Game {
     this.tutorialPopup.hide();
     this.hud.setVisible(true);
     this.mobile.setGameplayEnabled(true);
-    this.debugMenu.setAvailable(levelId === 'zoo');
-    this.debugMenu.setState({
-      levelName: level.title || level.name || levelId,
-      godMode: this.debugFlags.godMode,
-      anchors: level.debugAnchors || [],
-    });
   }
 
   startCampaign() {
@@ -210,9 +188,11 @@ export class Game {
     this.menuTitle.show();
     this.hud.setVisible(false);
     this.mobile.setGameplayEnabled(false);
-    this.debugMenu.hide();
-    this.debugMenu.setAvailable(false);
     this.tutorialPopup.show({ onClose });
+  }
+
+  _debugCommandsEnabled() {
+    return this.state.is(STATES.PLAYING) && this.currentLevelId === 'zoo';
   }
 
   _hasSeenTutorial() {
@@ -254,36 +234,31 @@ export class Game {
   }
 
   toggleGodMode() {
-    if (!this.debugMenu.available) return;
+    if (!this._debugCommandsEnabled()) return;
     this.debugFlags.godMode = !this.debugFlags.godMode;
     if (this.player) this.player.godMode = this.debugFlags.godMode;
-    this.debugMenu.setState({
-      levelName: this.currentLevel?.title || this.currentLevelId,
-      godMode: this.debugFlags.godMode,
-      anchors: this.currentLevel?.debugAnchors || [],
-    });
   }
 
   refillHp() {
-    if (!this.debugMenu.available) return;
+    if (!this._debugCommandsEnabled()) return;
     if (!this.player) return;
     this.player.refillHp();
   }
 
   refillAmmo() {
-    if (!this.debugMenu.available) return;
+    if (!this._debugCommandsEnabled()) return;
     if (!this.player) return;
     this.player.refillAmmo();
   }
 
   reloadCurrentLevel() {
-    if (!this.debugMenu.available) return;
+    if (!this._debugCommandsEnabled()) return;
     if (!this.currentLevelId) return;
     this._setLevel(this.currentLevelId);
   }
 
   teleportToAnchor(anchorId) {
-    if (!this.debugMenu.available || !this.player) return;
+    if (!this._debugCommandsEnabled() || !this.player) return;
     const anchors = this.currentLevel?.debugAnchors || [];
     const anchor = anchors.find((a) => a.id === anchorId);
     if (!anchor) return;
@@ -327,7 +302,6 @@ export class Game {
 
   update(dt) {
     if (this.state.is(STATES.MENU) || this.state.is(STATES.TUTORIAL)) {
-      this.debug.update(dt, this);
       this.input.endFrame();
       return;
     }
@@ -361,12 +335,6 @@ export class Game {
 
     this.cameraFollow.update(dt);
     this.hud.update(dt, this);
-    this.debugMenu.setState({
-      levelName: this.currentLevel?.title || this.currentLevelId,
-      godMode: this.debugFlags.godMode,
-      anchors: this.currentLevel?.debugAnchors || [],
-    });
-    this.debug.update(dt, this);
     this.input.endFrame();
   }
 

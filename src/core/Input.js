@@ -23,8 +23,6 @@ const KEYMAP = {
   KeyK:       { action: 'shoot',       kind: 'press' },
   KeyX:       { action: 'shoot',       kind: 'press' },
   KeyR:       { action: 'restart',     kind: 'press' },
-  KeyB:       { action: 'toggleDebug', kind: 'press' },
-  F1:         { action: 'toggleDevMenu', kind: 'press' },
   KeyG:       { action: 'toggleGodMode', kind: 'press' },
   KeyH:       { action: 'refillHp',      kind: 'press' },
   KeyN:       { action: 'refillAmmo',    kind: 'press' },
