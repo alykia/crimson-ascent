@@ -12,6 +12,8 @@ import dashFrame3Url from '../assets/T_Character_Dash03.png';
 import dashFrame4Url from '../assets/T_Character_Dash04.png';
 import dashFrame5Url from '../assets/T_Character_Dash05.png';
 import dashFrame6Url from '../assets/T_Character_Dash06.png';
+import jumpFrame0Url from '../assets/T_Character_Jump00.png';
+import jumpFrame1Url from '../assets/T_Character_Jump01.png';
 
 // Kinematic AABB driven by handmade physics. Phase 2 implements:
 //   - horizontal accel/decel with separate air values
@@ -103,9 +105,22 @@ export class Player {
         return tex;
       });
     }
+    if (!Player._jumpTextures) {
+      const loader = new THREE.TextureLoader();
+      Player._jumpTextures = [jumpFrame0Url, jumpFrame1Url].map((url) => {
+        const tex = loader.load(url);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.wrapS = THREE.ClampToEdgeWrapping;
+        tex.wrapT = THREE.ClampToEdgeWrapping;
+        tex.magFilter = THREE.NearestFilter;
+        tex.minFilter = THREE.NearestFilter;
+        return tex;
+      });
+    }
 
     this._idleTextures = Player._idleTextures;
     this._dashTextures = Player._dashTextures;
+    this._jumpTextures = Player._jumpTextures;
     this._idleFrameIndex = 0;
     this._idleFrameTimerMs = 0;
     this._idleFrameDurationMs = 240;
@@ -116,6 +131,12 @@ export class Player {
     this._visualScaleX = 1.38;
     this._visualScaleY = 1.18;
     this._visualYOffset = ((this._visualScaleY - 1) * this.aabb.h) / 2;
+    // Jump frames include a bit more transparent padding, so we slightly
+    // upscale only while airborne (outside dash) to keep perceived size even.
+    this._jumpVisualScaleMult = 1.12;
+    this._jumpVisualYOffset = ((this._jumpVisualScaleMult - 1) * this.aabb.h * this._visualScaleY) / 2;
+    this._dashVisualScaleMult = 1.12;
+    this._dashVisualYOffset = ((this._dashVisualScaleMult - 1) * this.aabb.h * this._visualScaleY) / 2;
 
     const geo = new THREE.PlaneGeometry(this.aabb.w, this.aabb.h);
     this._mat = new THREE.MeshBasicMaterial({
@@ -123,6 +144,7 @@ export class Player {
       color: COLORS.PLAYER,
       transparent: true,
       alphaTest: 0.02,
+      side: THREE.DoubleSide,
     });
     this.mesh = new THREE.Mesh(geo, this._mat);
     this.mesh.scale.set(this._visualScaleX, this._visualScaleY, 1);
@@ -369,6 +391,17 @@ export class Player {
 
     this._dashFrameIndex = -1;
     if (!this._idleTextures || this._idleTextures.length < 2) return;
+
+    if (!this.grounded && this._jumpTextures?.length >= 2) {
+      // Key poses: frame 0 while ascending/takeoff, frame 1 while descending.
+      const jumpFrame = this.vel.y >= 0 ? 0 : 1;
+      if (this._mat.map !== this._jumpTextures[jumpFrame]) {
+        this._mat.map = this._jumpTextures[jumpFrame];
+        this._mat.needsUpdate = true;
+      }
+      return;
+    }
+
     if (this._mat.map !== this._idleTextures[this._idleFrameIndex]) {
       this._mat.map = this._idleTextures[this._idleFrameIndex];
       this._mat.needsUpdate = true;
@@ -394,8 +427,21 @@ export class Player {
   }
 
   _syncMesh() {
+    const dashVisualActive = this.dashMsLeft > 0;
+    const jumpVisualActive = !this.grounded && !dashVisualActive;
+    const stateScale = dashVisualActive
+      ? this._dashVisualScaleMult
+      : (jumpVisualActive ? this._jumpVisualScaleMult : 1);
+    const stateYOffset = dashVisualActive
+      ? this._dashVisualYOffset
+      : (jumpVisualActive ? this._jumpVisualYOffset : 0);
+    const sx = this._visualScaleX * stateScale;
+    const sy = this._visualScaleY * stateScale;
+
     this.mesh.position.x = this.aabb.x;
-    this.mesh.position.y = this.aabb.y + this._visualYOffset;
+    this.mesh.position.y = this.aabb.y + this._visualYOffset + stateYOffset;
+    this.mesh.scale.x = this.facing >= 0 ? sx : -sx;
+    this.mesh.scale.y = sy;
   }
 
   // Fires a player arrow if ammo > 0 and not mid-dash. Aim:
