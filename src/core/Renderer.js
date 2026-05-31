@@ -2,8 +2,11 @@ import * as THREE from 'three';
 import { COLORS } from '../config/colors.js';
 import { WORLD } from '../config/constants.js';
 
-// Graybox renderer: orthographic, flat unlit materials, no post-processing.
-// Visible vertical extent stays constant; horizontal extent recomputes on resize.
+const PIXEL_RATIO_CAP = 2;
+
+// Orthographic renderer for the 2D X/Y playfield. The canvas CSS controls the
+// portrait play area; the camera projects world units into that box without
+// stretching sprites.
 export class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -15,7 +18,7 @@ export class Renderer {
     });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.NoToneMapping;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    this._setPixelRatio();
     this.renderer.setClearColor(COLORS.BACKGROUND);
 
     this.scene = new THREE.Scene();
@@ -29,18 +32,25 @@ export class Renderer {
 
     this._onResize = this._onResize.bind(this);
     window.addEventListener('resize', this._onResize);
+    window.addEventListener('orientationchange', this._onResize);
+    window.visualViewport?.addEventListener('resize', this._onResize);
     if (typeof ResizeObserver !== 'undefined') {
       this._ro = new ResizeObserver(this._onResize);
-      this._ro.observe(canvas.parentElement || document.body);
+      this._ro.observe(canvas);
     }
     this._onResize();
   }
 
+  _setPixelRatio() {
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, PIXEL_RATIO_CAP));
+  }
+
   _onResize() {
-    const parent = this.canvas.parentElement || document.body;
-    const w = parent.clientWidth;
-    const h = parent.clientHeight;
+    const rect = this.canvas.getBoundingClientRect();
+    const w = Math.round(rect.width || this.canvas.clientWidth);
+    const h = Math.round(rect.height || this.canvas.clientHeight);
     if (w === 0 || h === 0) return;
+    this._setPixelRatio();
     this.renderer.setSize(w, h, false);
     const aspect = w / h;
     const half = this._viewHeight / 2;
@@ -57,6 +67,8 @@ export class Renderer {
 
   dispose() {
     window.removeEventListener('resize', this._onResize);
+    window.removeEventListener('orientationchange', this._onResize);
+    window.visualViewport?.removeEventListener('resize', this._onResize);
     if (this._ro) this._ro.disconnect();
     this.renderer.dispose();
   }

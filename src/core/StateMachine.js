@@ -1,7 +1,8 @@
 export const STATES = Object.freeze({
   BOOT: 'boot',
-  TITLE: 'title',
-  PLAY: 'play',
+  MENU: 'menu',
+  PLAYING: 'playing',
+  TUTORIAL: 'tutorial',
   DEAD: 'dead',
   RESPAWNING: 'respawning',
   PAUSE: 'pause',

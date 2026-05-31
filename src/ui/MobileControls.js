@@ -5,6 +5,7 @@ export class MobileControls {
   constructor(uiRoot, input) {
     this.input = input;
     this.visible = false;
+    this.gameplayEnabled = false;
 
     this.el = document.createElement('div');
     this.el.id = 'mobile-controls';
@@ -34,13 +35,14 @@ export class MobileControls {
     this._wireBtn(this.dashBtn,  'dash',  { held: false });
     this._wireBtn(this.shootBtn, 'shoot', { held: false });
 
-    // Show on touch device or first touch; hide on keyboard activity.
+    // Show on touch device or first touch once gameplay is active; hide on keyboard activity.
     if (window.matchMedia?.('(pointer: coarse)').matches) this.show();
     window.addEventListener('touchstart', () => this.show(), { passive: true, once: false });
     window.addEventListener('keydown', () => this.hide(), { passive: true, once: false });
   }
 
   show() {
+    if (!this.gameplayEnabled) return;
     if (this.visible) return;
     this.visible = true;
     this.el.classList.add('visible');
@@ -52,6 +54,12 @@ export class MobileControls {
     this.el.classList.remove('visible');
   }
 
+  setGameplayEnabled(enabled) {
+    this.gameplayEnabled = !!enabled;
+    if (!this.gameplayEnabled) this.hide();
+    else if (window.matchMedia?.('(pointer: coarse)').matches) this.show();
+  }
+
   _makeBtn(extraClass, label) {
     const b = document.createElement('button');
     b.type = 'button';
@@ -61,8 +69,8 @@ export class MobileControls {
   }
 
   _wireStick() {
-    const outerR = 60;
-    const deadR = 14;
+    let outerR = 60;
+    let deadR = 14;
     let activeId = null;
     let cx = 0;
     let cy = 0;
@@ -81,6 +89,8 @@ export class MobileControls {
       activeId = e.pointerId;
       try { this.stick.setPointerCapture(e.pointerId); } catch { /* noop */ }
       const rect = this.stick.getBoundingClientRect();
+      outerR = Math.min(rect.width, rect.height) / 2;
+      deadR = Math.max(10, outerR * 0.23);
       cx = rect.left + rect.width / 2;
       cy = rect.top + rect.height / 2;
     });

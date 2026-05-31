@@ -2,7 +2,7 @@
 // Times in milliseconds unless noted. Distances/speeds in world units.
 
 export const WORLD = Object.freeze({
-  VIEW_HEIGHT: 18,        // visible world units, vertical extent (orthographic)
+  VIEW_HEIGHT: 22,        // visible world units, vertical extent (orthographic)
   GRAVITY: -75,           // units / s^2 (negative = down)
   MAX_FALL_SPEED: -36,    // terminal velocity
   DEATH_Y: -20,           // below this -> respawn
@@ -89,11 +89,11 @@ export const HAZARD = Object.freeze({
 });
 
 export const CAMERA = Object.freeze({
-  OFFSET_Y: 2.5,          // bias upward (visibility above player)
-  DEAD_X: 1.6,
-  DEAD_Y: 1.2,
-  LERP: 8,                // higher = snappier follow
-  LEAD_X: 1.4,            // horizontal velocity-based look-ahead amount
+  OFFSET_Y: 4.0,          // camera above player; player sits lower for climb visibility
+  DEAD_X: 1.2,
+  DEAD_Y: 0.9,
+  LERP: 10,               // higher = snappier follow
+  LEAD_X: 1.2,            // horizontal velocity-based look-ahead amount
   LEAD_REF_SPEED: 9.0,    // velocity magnitude that produces full lead
 });
 

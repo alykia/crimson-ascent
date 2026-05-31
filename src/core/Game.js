@@ -10,6 +10,7 @@ import { DebugOverlay } from '../systems/DebugOverlay.js';
 import { Hud } from '../ui/Hud.js';
 import { MobileControls } from '../ui/MobileControls.js';
 import { MenuTitle } from '../ui/MenuTitle.js';
+import { TutorialPopup } from '../ui/TutorialPopup.js';
 import { DebugMenu } from '../ui/DebugMenu.js';
 import { Platform } from '../objects/Platform.js';
 import { Wall } from '../objects/Wall.js';
@@ -25,6 +26,8 @@ import { LevelBackground } from '../objects/LevelBackground.js';
 import { getLevelById } from '../config/levels.js';
 import { readRuntimeFlags } from '../config/runtimeFlags.js';
 import { WORLD, PLAYER } from '../config/constants.js';
+
+const TUTORIAL_STORAGE_KEY = 'crimson_ascent_tutorial_seen';
 
 // Top-level orchestrator. Owns the scene (via Renderer), all systems, and the
 // game loop. Phase 1 ships with a static graybox level and no player yet.
@@ -68,9 +71,11 @@ export class Game {
 
     this.menuTitle = new MenuTitle(uiRoot, {
       zooEnabled: this.runtimeFlags.zooEnabled,
-      onStartGame: () => this.startCampaign(),
+      onStartGame: () => this.requestStartCampaign(),
+      onOpenTutorial: () => this.showTutorialFromMenu(),
       onEnterZoo: () => this.enterZoo(),
     });
+    this.tutorialPopup = new TutorialPopup(uiRoot);
 
     this.debugMenu = new DebugMenu(uiRoot, {
       onToggleGodMode: () => this.toggleGodMode(),
@@ -86,7 +91,7 @@ export class Game {
       () => this.render()
     );
 
-    this._gotoTitle();
+    this._gotoMenu();
   }
 
   _loadLevel(level) {
@@ -144,11 +149,13 @@ export class Game {
     };
   }
 
-  _gotoTitle() {
-    this.state.set(STATES.TITLE);
+  _gotoMenu() {
+    this.state.set(STATES.MENU);
     this.menuTitle.setZooEnabled(this.runtimeFlags.zooEnabled);
     this.menuTitle.show();
+    this.tutorialPopup.hide();
     this.hud.setVisible(false);
+    this.mobile.setGameplayEnabled(false);
     this.debugMenu.hide();
     this.debugMenu.setAvailable(false);
   }
@@ -158,9 +165,11 @@ export class Game {
     this.currentLevelId = levelId;
     this.currentLevel = level;
     this._loadLevel(level);
-    this.state.set(STATES.PLAY);
+    this.state.set(STATES.PLAYING);
     this.menuTitle.hide();
+    this.tutorialPopup.hide();
     this.hud.setVisible(true);
+    this.mobile.setGameplayEnabled(true);
     this.debugMenu.setAvailable(levelId === 'zoo');
     this.debugMenu.setState({
       levelName: level.title || level.name || levelId,
@@ -173,13 +182,62 @@ export class Game {
     this._setLevel('campaign');
   }
 
+  requestStartCampaign() {
+    if (this._hasSeenTutorial()) {
+      this.startCampaign();
+      return;
+    }
+
+    this._openTutorial({
+      onClose: () => {
+        this._markTutorialSeen();
+        this.startCampaign();
+      },
+    });
+  }
+
+  showTutorialFromMenu() {
+    this._openTutorial({
+      onClose: () => {
+        this._markTutorialSeen();
+        this._gotoMenu();
+      },
+    });
+  }
+
+  _openTutorial({ onClose }) {
+    this.state.set(STATES.TUTORIAL);
+    this.menuTitle.show();
+    this.hud.setVisible(false);
+    this.mobile.setGameplayEnabled(false);
+    this.debugMenu.hide();
+    this.debugMenu.setAvailable(false);
+    this.tutorialPopup.show({ onClose });
+  }
+
+  _hasSeenTutorial() {
+    try {
+      return window.localStorage?.getItem(TUTORIAL_STORAGE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  _markTutorialSeen() {
+    try {
+      window.localStorage?.setItem(TUTORIAL_STORAGE_KEY, '1');
+    } catch {
+      // Private browsing or storage restrictions should not block play.
+    }
+  }
+
   enterZoo() {
     if (!this.runtimeFlags.zooEnabled) return;
     this._setLevel('zoo');
   }
 
   _handleRestart() {
-    if (this.state.is(STATES.TITLE)) return;
+    if (!this.state.is(STATES.PLAYING)) return;
     this.respawn();
   }
 
@@ -268,8 +326,7 @@ export class Game {
   }
 
   update(dt) {
-    if (this.state.is(STATES.TITLE)) {
-      this.hud.update(dt, this);
+    if (this.state.is(STATES.MENU) || this.state.is(STATES.TUTORIAL)) {
       this.debug.update(dt, this);
       this.input.endFrame();
       return;
