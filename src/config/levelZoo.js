@@ -29,7 +29,7 @@ export const ZOO_LEVEL = {
     { type: 'platform', x: -13, y: 30, w: 10, h: 0.6, spriteVariant: 'platform1', spriteFlipX: true },
     { type: 'platform', x: 0, y: 30, w: 10, h: 0.6, spriteVariant: 'platform3' },
     { type: 'platform', x: 13, y: 30, w: 10, h: 0.6, spriteVariant: 'platform1', spriteFlipX: true },
-    { type: 'checkpoint', x: 0, y: 30.9 },
+    { type: 'checkpoint', x: 0, y: 31.0 },
     { type: 'label', x: 0, y: 32.7, text: 'ZOO HUB: jump into bays, F1 for tools', w: 9.4, h: 0.95 },
 
     // ---- Ammo station near spawn hub ----

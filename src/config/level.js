@@ -50,7 +50,7 @@ export const LEVEL = {
     // Split top shelf: leaves the center line open under the checkpoint so the
     // route doesn't feel blocked, while still giving two narrow landing options.
     { type: 'platform', x: 4.2, y: 14.1, w: 1.5, h: 0.5, spriteVariant: 'platform3' },
-    { type: 'checkpoint', x: 4.2, y: 14.9 },
+    { type: 'checkpoint', x: 4.2, y: 15.05 },
 
     // =============================================================
     // SECTION 3 — DASH INTRODUCTION  (y 15 - 22)
@@ -68,7 +68,7 @@ export const LEVEL = {
     // Step up
     { type: 'platform', x: -3, y: 19.5, w: 3,   h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
     { type: 'platform', x:  3, y: 21.5, w: 4,   h: 0.5, spriteVariant: 'platform1' },
-    { type: 'checkpoint', x: 3, y: 22.5 },
+    { type: 'checkpoint', x: 3, y: 22.45 },
 
     // =============================================================
     // SECTION 4 — ARROW USAGE  (y 22 - 30)
@@ -86,7 +86,7 @@ export const LEVEL = {
     { type: 'platform', x: -4, y: 26.5, w: 3, h: 0.5, spriteVariant: 'platform2' },
     { type: 'platform', x: -2, y: 28.5, w: 3, h: 0.5, spriteVariant: 'platform3' },
     { type: 'platform', x:  3, y: 30.0, w: 4, h: 0.5, spriteVariant: 'platform1' },
-    { type: 'checkpoint', x: 3, y: 31.2 },
+    { type: 'checkpoint', x: 3, y: 30.95 },
 
     // =============================================================
     // SECTION 5 — FALLING SPIKES  (y 30 - 38)
@@ -104,7 +104,7 @@ export const LEVEL = {
 
     // Safe top landing offset from any spike column
     { type: 'platform', x: 3, y: 37.5, w: 4, h: 0.5, spriteVariant: 'platform1', spriteFlipX: true },
-    { type: 'checkpoint', x: 3, y: 38.7 },
+    { type: 'checkpoint', x: 3, y: 38.45 },
 
     // =============================================================
     // SECTION 6 — COMBINED CHALLENGE  (y 38 - 48)
@@ -132,6 +132,6 @@ export const LEVEL = {
     { type: 'spike',    x: 0, y: 49, w: 1, h: 1, triggerH: 3 },
     // Summit
     { type: 'platform', x: -4, y: 48, w: 3, h: 0.5, spriteVariant: 'platform3' },
-    { type: 'checkpoint', x: -4, y: 49.2 },
+    { type: 'checkpoint', x: -4, y: 48.95 },
   ],
 };
