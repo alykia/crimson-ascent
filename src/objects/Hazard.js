@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { COLORS } from '../config/colors.js';
 import { HAZARD } from '../config/constants.js';
 import { Physics } from '../systems/Physics.js';
-import fallingSpikeSpriteUrl from '../assets/T_FallingSpikes_Sprite.png';
+import fallingSpikeSpriteUrl from '../assets/T_FallingSpike2_sprite.png';
 
 // FallingSpike — sits in place, watches a trigger zone below it, drops on
 // entry after a brief warning blink, then resets after SPIKE_RESET_MS.
