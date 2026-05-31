@@ -1,6 +1,8 @@
-// DOM HUD: hearts (top-right) and arrow ammo. Plain divs styled via style.css
-// so we don't burn GPU time on overlay text inside the WebGL canvas.
+// DOM HUD: hearts and arrow ammo. Styled via style.css so we don't burn
+// GPU time on overlay text inside the WebGL canvas.
 import arrowSpriteUrl from '../assets/T_arrow_sprite.png';
+import healthFullSpriteUrl from '../assets/T_HealthFull_sprite.png';
+import healthEmptySpriteUrl from '../assets/T_HealthEmpty_sprite.png';
 
 export class Hud {
   constructor(uiRoot) {
@@ -57,8 +59,12 @@ export class Hud {
   _renderHearts(hp, max) {
     this.heartsEl.innerHTML = '';
     for (let i = 0; i < max; i++) {
-      const heart = document.createElement('div');
-      heart.className = 'hud-heart' + (i >= hp ? ' empty' : '');
+      const heart = document.createElement('img');
+      const isEmpty = i >= hp;
+      heart.className = 'hud-heart' + (isEmpty ? ' empty' : '');
+      heart.src = isEmpty ? healthEmptySpriteUrl : healthFullSpriteUrl;
+      heart.alt = '';
+      heart.draggable = false;
       this.heartsEl.appendChild(heart);
     }
   }
