@@ -22,6 +22,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Minecraft';
+  src: url('../fonts/Minecraft.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -459,7 +467,7 @@ html, body {
 .menu-footer {
   margin: 18px 0 0;
   color: rgba(185, 213, 243, 0.62);
-  font: 600 11px/1.2 'Determination', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  font: 600 11px/1.2 'Minecraft', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
