@@ -5,6 +5,13 @@ import { Ghost } from './Ghost.js';
 import { Arrow } from './Arrow.js';
 import idleFrame0Url from '../assets/T_CharacterChibi_Idle00.png';
 import idleFrame1Url from '../assets/T_CharacterChibi_Idle01.png';
+import dashFrame0Url from '../assets/T_Character_Dash00.png';
+import dashFrame1Url from '../assets/T_Character_Dash01.png';
+import dashFrame2Url from '../assets/T_Character_Dash02.png';
+import dashFrame3Url from '../assets/T_Character_Dash03.png';
+import dashFrame4Url from '../assets/T_Character_Dash04.png';
+import dashFrame5Url from '../assets/T_Character_Dash05.png';
+import dashFrame6Url from '../assets/T_Character_Dash06.png';
 
 // Kinematic AABB driven by handmade physics. Phase 2 implements:
 //   - horizontal accel/decel with separate air values
@@ -76,11 +83,36 @@ export class Player {
         return tex;
       });
     }
+    if (!Player._dashTextures) {
+      const loader = new THREE.TextureLoader();
+      Player._dashTextures = [
+        dashFrame0Url,
+        dashFrame1Url,
+        dashFrame2Url,
+        dashFrame3Url,
+        dashFrame4Url,
+        dashFrame5Url,
+        dashFrame6Url,
+      ].map((url) => {
+        const tex = loader.load(url);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.wrapS = THREE.ClampToEdgeWrapping;
+        tex.wrapT = THREE.ClampToEdgeWrapping;
+        tex.magFilter = THREE.NearestFilter;
+        tex.minFilter = THREE.NearestFilter;
+        return tex;
+      });
+    }
 
     this._idleTextures = Player._idleTextures;
+    this._dashTextures = Player._dashTextures;
     this._idleFrameIndex = 0;
     this._idleFrameTimerMs = 0;
     this._idleFrameDurationMs = 240;
+    // Keyframe order for dash visual timing. Repeating frame 2 makes the
+    // bat form readable for longer during the short dash window.
+    this._dashFrameSequence = [0, 1, 2, 2, 2, 2, 3, 4, 5, 6];
+    this._dashFrameIndex = -1;
     this._visualScaleX = 1.38;
     this._visualScaleY = 1.18;
     this._visualYOffset = ((this._visualScaleY - 1) * this.aabb.h) / 2;
@@ -160,6 +192,9 @@ export class Player {
       this._dashDir = this.facing || 1;
       this._trailTimerMs = 0;
       this._dashWasAirborne = !this.grounded;
+      this._dashFrameIndex = 0;
+      this._mat.map = this._dashTextures[0];
+      this._mat.needsUpdate = true;
       this._spawnGhost(game);
     }
 
@@ -289,31 +324,55 @@ export class Player {
     }
 
     this._updateTint();
-    this._updateIdleAnimation(dtMs);
+    this._updateSpriteAnimation(dtMs);
     this._syncMesh();
   }
 
   _updateTint() {
-    let hex = COLORS.PLAYER;
-    if (this.dashMsLeft > 0)      hex = COLORS.PLAYER_DASHING;
-    else if (this.iframeMs > 0)   hex = COLORS.PLAYER_IFRAME;
+    let hex = 0xffffff;
+    if (this.iframeMs > 0) hex = COLORS.PLAYER_IFRAME;
     this._mat.color.setHex(hex);
   }
 
   _spawnGhost(game) {
     const ghost = new Ghost(
       this.mesh.geometry,
-      COLORS.PLAYER_DASHING,
+      COLORS.PLAYER_GHOST,
       this.mesh.position,
       240,
-      0.55
+      0.55,
+      this._mat.map
     );
     ghost.mesh.scale.copy(this.mesh.scale);
     game.entities.add(ghost);
   }
 
-  _updateIdleAnimation(dtMs) {
+  _updateSpriteAnimation(dtMs) {
+    if (this.dashMsLeft > 0 && this._dashTextures?.length) {
+      const dashProgress = THREE.MathUtils.clamp(
+        (PLAYER.DASH_DURATION_MS - this.dashMsLeft) / PLAYER.DASH_DURATION_MS,
+        0,
+        1
+      );
+      const seqIdx = Math.min(
+        this._dashFrameSequence.length - 1,
+        Math.floor(dashProgress * this._dashFrameSequence.length)
+      );
+      const nextFrame = this._dashFrameSequence[seqIdx];
+      if (nextFrame !== this._dashFrameIndex) {
+        this._dashFrameIndex = nextFrame;
+        this._mat.map = this._dashTextures[this._dashFrameIndex];
+        this._mat.needsUpdate = true;
+      }
+      return;
+    }
+
+    this._dashFrameIndex = -1;
     if (!this._idleTextures || this._idleTextures.length < 2) return;
+    if (this._mat.map !== this._idleTextures[this._idleFrameIndex]) {
+      this._mat.map = this._idleTextures[this._idleFrameIndex];
+      this._mat.needsUpdate = true;
+    }
     this._idleFrameTimerMs += dtMs;
     while (this._idleFrameTimerMs >= this._idleFrameDurationMs) {
       this._idleFrameTimerMs -= this._idleFrameDurationMs;

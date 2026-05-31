@@ -6,6 +6,7 @@ export const COLORS = Object.freeze({
   WALL:               0x2a2a30, // slightly darker gray
   PLAYER:             0xe0e0e0,
   PLAYER_DASHING:     0xffd54a,
+  PLAYER_GHOST:       0x8f1d2c, // deep red
   PLAYER_IFRAME:      0xff80a0,
   HAZARD:             0xc62828, // red
   HAZARD_WARNING:     0xffa040,

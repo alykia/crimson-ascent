@@ -4,12 +4,14 @@ import * as THREE from 'three';
 // Used by the dash trail. Shares the source geometry (no alloc) and owns
 // its own material so it can fade independently.
 export class Ghost {
-  constructor(geometry, colorHex, position, lifeMs = 240, startOpacity = 0.55) {
+  constructor(geometry, colorHex, position, lifeMs = 240, startOpacity = 0.55, textureMap = null) {
     this.tag = 'fx';
     this._material = new THREE.MeshBasicMaterial({
       color: colorHex,
+      map: textureMap || null,
       transparent: true,
       opacity: startOpacity,
+      alphaTest: textureMap ? 0.05 : 0,
       depthWrite: false,
     });
     this.mesh = new THREE.Mesh(geometry, this._material);
