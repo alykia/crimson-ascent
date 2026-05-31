@@ -77,6 +77,7 @@ export class MobileControls {
 
     const reset = () => {
       this.knob.style.transform = '';
+      this.input.setMoveAxis(0, 0);
       this.input.setHeld('left', false);
       this.input.setHeld('right', false);
       this.input.setHeld('up', false);
@@ -106,8 +107,20 @@ export class MobileControls {
         dy = (dy / mag) * outerR;
       }
       this.knob.style.transform = `translate(${dx}px, ${dy}px)`;
-      const ax = Math.abs(dx) > deadR ? dx : 0;
-      const ay = Math.abs(dy) > deadR ? dy : 0;
+      const deadN = deadR / outerR;
+      const toAxis = (valuePx) => {
+        const raw = valuePx / outerR; // [-1, 1] in stick space
+        const magRaw = Math.abs(raw);
+        if (magRaw <= deadN) return 0;
+        const remapped = (magRaw - deadN) / (1 - deadN);
+        return Math.sign(raw) * Math.min(1, remapped);
+      };
+      const axisX = toAxis(dx);
+      const axisY = toAxis(dy);
+
+      this.input.setMoveAxis(axisX, -axisY); // world up is positive Y
+      const ax = axisX;
+      const ay = axisY;
       this.input.setHeld('left',  ax < 0);
       this.input.setHeld('right', ax > 0);
       this.input.setHeld('up',    ay < 0); // screen Y is inverted

@@ -37,6 +37,10 @@ export class Input {
     };
     this.justPressed = Object.create(null);
     this.justReleased = Object.create(null);
+    this.axis = {
+      moveX: 0,
+      moveY: 0,
+    };
     this._listeners = [];
 
     this._onKeyDown = this._onKeyDown.bind(this);
@@ -110,5 +114,13 @@ export class Input {
   triggerEvent(action) {
     this.justPressed[action] = true;
     this._fire(action);
+  }
+
+  // Used by analog input sources (mobile stick) to feed normalized axes.
+  // Values are expected in [-1, 1].
+  setMoveAxis(x, y = 0) {
+    const clamp = (v) => Math.max(-1, Math.min(1, Number.isFinite(v) ? v : 0));
+    this.axis.moveX = clamp(x);
+    this.axis.moveY = clamp(y);
   }
 }

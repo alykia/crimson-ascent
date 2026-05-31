@@ -52,6 +52,7 @@ export class Player {
     // Refunded by an air dash: lets the player jump once more mid-air after
     // the dash ends. Consumed on use, cleared on ground touch.
     this._airJumpAvailable = false;
+    this._debugMoveInputX = 0;
 
     // Health placeholders (Phase 4)
     this.hp = PLAYER.MAX_HP;
@@ -132,10 +133,20 @@ export class Player {
       this.jumpBufferMs = PLAYER.JUMP_BUFFER_MS;
     }
 
-    let ix = 0;
-    if (input.held.left)  ix -= 1;
-    if (input.held.right) ix += 1;
-    if (ix !== 0 && this.dashMsLeft <= 0) this.facing = ix;
+    const analogX = input.axis?.moveX ?? 0;
+    let digitalX = 0;
+    if (input.held.left)  digitalX -= 1;
+    if (input.held.right) digitalX += 1;
+
+    // Grounded movement uses analog magnitude for smoother mobile walk speed.
+    // Airborne movement keeps full directional control to preserve jump feel.
+    let ix = Math.abs(analogX) >= 0.001 ? analogX : digitalX;
+    if (!this.grounded) {
+      ix = digitalX !== 0 ? digitalX : Math.sign(ix);
+    }
+
+    if (ix !== 0 && this.dashMsLeft <= 0) this.facing = Math.sign(ix);
+    this._debugMoveInputX = ix;
 
     // ---- Shoot ----
     if (input.justPressed.shoot) this._tryShoot(game, input);
@@ -182,8 +193,9 @@ export class Player {
       if (this.vel.y < WORLD.MAX_FALL_SPEED) this.vel.y = WORLD.MAX_FALL_SPEED;
 
       // Wall slide cap — only when in the air and pressing into the wall.
-      const pressIntoWallL = this.wallL && ix < 0;
-      const pressIntoWallR = this.wallR && ix > 0;
+      const wallPressX = digitalX !== 0 ? digitalX : Math.sign(ix);
+      const pressIntoWallL = this.wallL && wallPressX < 0;
+      const pressIntoWallR = this.wallR && wallPressX > 0;
       const sliding = !this.grounded && this.vel.y < PLAYER.WALL_SLIDE_SPEED &&
         (pressIntoWallL || pressIntoWallR);
       if (sliding) this.vel.y = PLAYER.WALL_SLIDE_SPEED;

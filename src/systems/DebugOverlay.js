@@ -32,6 +32,13 @@ export class DebugOverlay {
       `entities: ${game.entities.entities.length}`,
     ];
 
+    const cam = game?.renderer?.camera;
+    if (cam) {
+      const worldW = cam.right - cam.left;
+      const worldH = cam.top - cam.bottom;
+      lines.push(`cam zoom: ${cam.zoom.toFixed(2)}  world: ${worldW.toFixed(2)}x${worldH.toFixed(2)}`);
+    }
+
     if (game.debugFlags?.godMode) lines.push('god mode: ON');
 
     const p = game.player;
@@ -39,6 +46,13 @@ export class DebugOverlay {
       lines.push('');
       lines.push(`pos:      (${p.aabb.x.toFixed(2)}, ${p.aabb.y.toFixed(2)})`);
       lines.push(`vel:      (${p.vel.x.toFixed(2)}, ${p.vel.y.toFixed(2)})`);
+      lines.push(`velX:     ${p.vel.x.toFixed(2)} u/s`);
+      lines.push(`inputX:   ${(p._debugMoveInputX ?? 0).toFixed(2)}`);
+      if (cam) {
+        const worldW = cam.right - cam.left;
+        const screenFracPerSec = worldW > 0 ? Math.abs(p.vel.x) / worldW : 0;
+        lines.push(`screen/s: ${(screenFracPerSec * 100).toFixed(1)}% width/s`);
+      }
       lines.push(`grounded: ${p.grounded ? 'Y' : '.'}    wallL: ${p.wallL ? 'Y' : '.'}    wallR: ${p.wallR ? 'Y' : '.'}`);
       lines.push(`coyote:   ${p.coyoteMs.toFixed(0).padStart(4)}ms   buffer: ${p.jumpBufferMs.toFixed(0).padStart(4)}ms`);
       lines.push(`stamina:  ${p.wallStamina}/${p.wallStaminaMax}    facing: ${p.facing > 0 ? 'R' : 'L'}`);
