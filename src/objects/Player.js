@@ -429,6 +429,7 @@ export class Player {
   _syncMesh() {
     const dashVisualActive = this.dashMsLeft > 0;
     const jumpVisualActive = !this.grounded && !dashVisualActive;
+    const renderFacing = dashVisualActive ? (this._dashDir || this.facing) : this.facing;
     const stateScale = dashVisualActive
       ? this._dashVisualScaleMult
       : (jumpVisualActive ? this._jumpVisualScaleMult : 1);
@@ -440,7 +441,7 @@ export class Player {
 
     this.mesh.position.x = this.aabb.x;
     this.mesh.position.y = this.aabb.y + this._visualYOffset + stateYOffset;
-    this.mesh.scale.x = this.facing >= 0 ? sx : -sx;
+    this.mesh.scale.x = renderFacing >= 0 ? sx : -sx;
     this.mesh.scale.y = sy;
   }
 

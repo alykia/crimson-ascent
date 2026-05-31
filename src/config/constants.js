@@ -42,7 +42,7 @@ export const PLAYER = Object.freeze({
   // to MAX_RUN_SPEED when the dash window ends) the total horizontal carry
   // is ~4 units, predictable. An air dash also refunds one in-air jump until
   // ground touch (see Player._airJumpAvailable).
-  DASH_SPEED: 22,
+  DASH_SPEED: 19,
   DASH_DURATION_MS: 100,
   DASH_FREEZE_MS: 55,     // hit-pause on successful enemy hit
 
