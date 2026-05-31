@@ -68,7 +68,7 @@ export const LEVEL = {
     // Step up
     { type: 'platform', x: -3, y: 19.5, w: 3,   h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
     { type: 'platform', x:  3, y: 21.5, w: 4,   h: 0.5, spriteVariant: 'platform1' },
-    { type: 'checkpoint', x: 3, y: 22.7 },
+    { type: 'checkpoint', x: 3, y: 22.5 },
 
     // =============================================================
     // SECTION 4 — ARROW USAGE  (y 22 - 30)

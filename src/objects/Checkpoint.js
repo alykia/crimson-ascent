@@ -14,7 +14,10 @@ function getCheckpointTexture() {
   return checkpointTexture;
 }
 
-const CHECKPOINT_VISUAL_SIZE = 2.6;
+const CHECKPOINT_VISUAL_SIZE = 1.8;
+const CHECKPOINT_TRIGGER_W = 0.8;
+const CHECKPOINT_TRIGGER_H = 1.4;
+const CHECKPOINT_VISUAL_CENTER_Y = -CHECKPOINT_TRIGGER_H / 2 + CHECKPOINT_VISUAL_SIZE / 2;
 const GLOW_SCALE_MULT = 1.18;
 const ACTIVE_GLOW_OPACITY = 0.52;
 const PARTICLE_COUNT = 84;
@@ -29,7 +32,7 @@ export class Checkpoint {
   constructor(opts) {
     this.tag = 'checkpoint';
     this.solid = false;
-    this.aabb = { x: opts.x, y: opts.y, w: 0.8, h: 1.4 };
+    this.aabb = { x: opts.x, y: opts.y, w: CHECKPOINT_TRIGGER_W, h: CHECKPOINT_TRIGGER_H };
     this.active = false;
 
     this._baseMat = new THREE.SpriteMaterial({
@@ -41,7 +44,7 @@ export class Checkpoint {
     });
     this._baseSprite = new THREE.Sprite(this._baseMat);
     this._baseSprite.scale.set(CHECKPOINT_VISUAL_SIZE, CHECKPOINT_VISUAL_SIZE, 1);
-    this._baseSprite.position.set(0, 0, 0.35);
+    this._baseSprite.position.set(0, CHECKPOINT_VISUAL_CENTER_Y, 0.35);
 
     this._glowMat = new THREE.SpriteMaterial({
       map: getCheckpointTexture(),
@@ -54,7 +57,7 @@ export class Checkpoint {
     this._glowSprite = new THREE.Sprite(this._glowMat);
     const glowSize = CHECKPOINT_VISUAL_SIZE * GLOW_SCALE_MULT;
     this._glowSprite.scale.set(glowSize, glowSize, 1);
-    this._glowSprite.position.set(0, 0, 0.34);
+    this._glowSprite.position.set(0, CHECKPOINT_VISUAL_CENTER_Y, 0.34);
 
     this._particlePhase = new Float32Array(PARTICLE_COUNT);
     this._particleBase = new Float32Array(PARTICLE_COUNT * 3);
@@ -90,7 +93,7 @@ export class Checkpoint {
       opacity: 0.0,
     });
     this._particles = new THREE.Points(this._particleGeo, this._particleMat);
-    this._particles.position.set(0, 0.08, 0.45);
+    this._particles.position.set(0, CHECKPOINT_VISUAL_CENTER_Y + 0.08, 0.45);
     this._particles.visible = false;
 
     this._burstPositions = new Float32Array(BURST_PARTICLE_COUNT * 3);
@@ -107,7 +110,7 @@ export class Checkpoint {
       opacity: 0.0,
     });
     this._burstParticles = new THREE.Points(this._burstGeo, this._burstMat);
-    this._burstParticles.position.set(0, 0.1, 0.5);
+    this._burstParticles.position.set(0, CHECKPOINT_VISUAL_CENTER_Y + 0.1, 0.5);
     this._burstParticles.visible = false;
     this._burstTimer = 0;
 
