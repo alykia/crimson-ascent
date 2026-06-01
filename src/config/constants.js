@@ -65,7 +65,7 @@ export const PLAYER = Object.freeze({
 export const ENEMY = Object.freeze({
   WALKER_WIDTH: 0.9,
   WALKER_HEIGHT: 0.9,
-  WALKER_SPEED: 1.6,
+  WALKER_SPEED: 1.1,
 
   ARCHER_WIDTH: 0.9,
   ARCHER_HEIGHT: 1.1,

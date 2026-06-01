@@ -57,7 +57,7 @@ export const LEVEL = {
     // Walker on a hub platform. Wide horizontal gap that needs the dash
     // (with the walker as a dash-refresh target on the way back).
     // =============================================================
-    { type: 'platform', x: 0, y: 16.5, w: 3, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
+    { type: 'platform', x: 0, y: 16.5, w: 4.5, h: 0.5, spriteVariant: 'platform1', spriteFlipX: true },
     { type: 'walker',   x: 0, y: 17.5, dir: 1 },
     // Wide gap → dash to clear
     { type: 'platform', x:  8, y: 17.5, w: 2.9, h: 0.5, spriteVariant: 'platform2' },
