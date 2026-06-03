@@ -24,10 +24,10 @@ const PARTICLE_COUNT = 84;
 const BURST_PARTICLE_COUNT = 44;
 const BURST_DURATION = 0.42;
 
-// Glowing blue box. Player touch activates it (sticky — survives respawn).
-// Activation deactivates the previously active checkpoint via CheckpointSystem.
-// Per dev plan: only restores position + HP; we also reset enemies / hazards
-// via the existing onPlayerRespawn pass in Game.respawn.
+// Glowing blue box. Player touch activates it once. Activated checkpoints stay
+// lit for the rest of the run; CheckpointSystem separately tracks the latest
+// activated checkpoint as the respawn point. They reset only on fresh level/game
+// loads, not on player death.
 export class Checkpoint {
   constructor(opts) {
     this.tag = 'checkpoint';

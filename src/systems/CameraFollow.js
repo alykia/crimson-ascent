@@ -15,6 +15,11 @@ export class CameraFollow {
     this.leadRefSpeed = CAMERA.LEAD_REF_SPEED;
 
     this._smoothedLead = 0;
+    this._bounds = null;
+  }
+
+  setBounds(bounds) {
+    this._bounds = bounds || null;
   }
 
   setTarget(target) {
@@ -24,8 +29,12 @@ export class CameraFollow {
 
   snap() {
     if (!this.target) return;
-    this.camera.position.x = this.target.aabb.x + this._smoothedLead;
-    this.camera.position.y = this.target.aabb.y + this.offsetY;
+    const p = this._clampPosition(
+      this.target.aabb.x + this._smoothedLead,
+      this.target.aabb.y + this.offsetY
+    );
+    this.camera.position.x = p.x;
+    this.camera.position.y = p.y;
   }
 
   update(dt) {
@@ -52,7 +61,30 @@ export class CameraFollow {
     }
 
     const k = 1 - Math.exp(-this.lerpRate * dt);
-    this.camera.position.x += (goalX - cx) * k;
-    this.camera.position.y += (goalY - cy) * k;
+    const p = this._clampPosition(
+      this.camera.position.x + (goalX - cx) * k,
+      this.camera.position.y + (goalY - cy) * k
+    );
+    this.camera.position.x = p.x;
+    this.camera.position.y = p.y;
+  }
+
+  _clampPosition(x, y) {
+    const b = this._bounds;
+    if (!b) return { x, y };
+
+    const halfW = (this.camera.right - this.camera.left) / 2;
+    const halfH = (this.camera.top - this.camera.bottom) / 2;
+    return {
+      x: this._clampAxis(x, b.minX, b.maxX, halfW),
+      y: this._clampAxis(y, b.minY, b.maxY, halfH),
+    };
+  }
+
+  _clampAxis(value, min, max, halfSize) {
+    const minCenter = min + halfSize;
+    const maxCenter = max - halfSize;
+    if (minCenter > maxCenter) return (min + max) / 2;
+    return Math.min(Math.max(value, minCenter), maxCenter);
   }
 }

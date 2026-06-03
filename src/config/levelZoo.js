@@ -4,12 +4,14 @@
 // Spawn starts on a high hub platform; each bay below isolates one concept.
 //
 // Object types:
-//   platform | wall | walker | archer | flyer | arrowPickup | spike | checkpoint | label
+//   platform | wall | walker | archer | flyer | arrowPickup | spike | checkpoint | label | door
 
 export const ZOO_LEVEL = {
+  id: 'zoo',
   name: 'zoo',
   title: 'Developer Zoo',
   spawn: { x: 0, y: 31.2 },
+  nextLevelId: 'level2',
   debugAnchors: [
     { id: 'hub', label: 'Hub', x: 0, y: 31.2 },
     { id: 'walker', label: 'Walker Bay', x: -19, y: 3.2 },
@@ -31,6 +33,8 @@ export const ZOO_LEVEL = {
     { type: 'platform', x: 13, y: 30, w: 10, h: 0.6, spriteVariant: 'platform1', spriteFlipX: true },
     { type: 'checkpoint', x: 0, y: 31.0 },
     { type: 'label', x: 0, y: 32.7, text: 'ZOO HUB: jump into bays, F1 for tools', w: 9.4, h: 0.95 },
+    { type: 'door', x: 13, y: 31.4, w: 1.6, h: 2.6, activateAtY: 29.5 },
+    { type: 'label', x: 13, y: 33.4, text: 'DOOR TEST: ENTER FOR LEVEL 2', w: 6.8, h: 0.86 },
 
     // ---- Ammo station near spawn hub ----
     { type: 'platform', x: 0, y: 24.6, w: 6, h: 0.6, spriteVariant: 'platform3' },

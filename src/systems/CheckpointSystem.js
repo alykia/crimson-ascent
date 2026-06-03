@@ -1,20 +1,33 @@
-// Tracks the current respawn point. Phase 1 = spawn only. Phase 8 = sticky
-// checkpoints that activate on touch and reset enemies/hazards on death.
+// Tracks the current respawn point. Checkpoints are one-shot activations:
+// once touched, they stay visibly active for the rest of the current run.
+// `active` means "latest respawn point", not "the only lit checkpoint".
 export class CheckpointSystem {
   constructor() {
     this.spawn = { x: 0, y: 2 };
     this.active = null;
+    this.activated = new Set();
   }
 
   setSpawn(x, y) {
     this.spawn = { x, y };
   }
 
+  // Clear the current respawn checkpoint. Called when (re)loading a level so
+  // checkpoint state never leaks across levels or fresh game runs.
+  reset() {
+    for (const checkpoint of this.activated) {
+      if (checkpoint?.setActive) checkpoint.setActive(false);
+    }
+    this.activated.clear();
+    this.active = null;
+  }
+
   activate(checkpoint) {
-    if (this.active === checkpoint) return;
-    if (this.active && this.active.setActive) this.active.setActive(false);
+    if (!checkpoint) return;
+    if (this.activated.has(checkpoint)) return;
+    this.activated.add(checkpoint);
     this.active = checkpoint;
-    if (checkpoint && checkpoint.setActive) checkpoint.setActive(true);
+    if (checkpoint.setActive) checkpoint.setActive(true);
   }
 
   respawnPoint() {

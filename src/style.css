@@ -111,6 +111,18 @@ html, body {
   overflow: hidden;
 }
 
+#level-transition {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 50;
+  image-rendering: pixelated;
+  /* steps() gives the fade a chunky, old-pixel-game cadence. */
+  transition: opacity 380ms steps(6, end);
+}
+
 #debug-overlay {
   position: absolute;
   top: max(8px, calc(var(--safe-top) + 8px));

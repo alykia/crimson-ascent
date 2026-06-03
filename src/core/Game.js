@@ -6,22 +6,14 @@ import { EntityManager } from '../systems/EntityManager.js';
 import { Physics } from '../systems/Physics.js';
 import { CameraFollow } from '../systems/CameraFollow.js';
 import { CheckpointSystem } from '../systems/CheckpointSystem.js';
+import { LevelManager } from '../systems/LevelManager.js';
+import { AudioManager } from '../systems/AudioManager.js';
 import { Hud } from '../ui/Hud.js';
 import { MobileControls } from '../ui/MobileControls.js';
 import { MenuTitle } from '../ui/MenuTitle.js';
 import { TutorialPopup } from '../ui/TutorialPopup.js';
-import { Platform } from '../objects/Platform.js';
-import { Wall } from '../objects/Wall.js';
-import { Player } from '../objects/Player.js';
-import { Walker } from '../objects/Walker.js';
-import { Archer } from '../objects/Archer.js';
-import { Flyer } from '../objects/Flyer.js';
-import { ArrowPickup } from '../objects/Pickup.js';
-import { FallingSpike } from '../objects/Hazard.js';
-import { Checkpoint } from '../objects/Checkpoint.js';
-import { LabelSign } from '../objects/LabelSign.js';
-import { LevelBackground } from '../objects/LevelBackground.js';
-import { getLevelById } from '../config/levels.js';
+import { Transition } from '../ui/Transition.js';
+import { getLevelById, FIRST_LEVEL_ID } from '../config/levels.js';
 import { readRuntimeFlags } from '../config/runtimeFlags.js';
 import { WORLD, PLAYER } from '../config/constants.js';
 
@@ -43,8 +35,11 @@ export class Game {
     this.physics = new Physics(this.entities);
     this.cameraFollow = new CameraFollow(this.renderer.camera);
     this.checkpoints = new CheckpointSystem();
+    this.audio = new AudioManager();
+    this.levelManager = new LevelManager(this);
     this.hud = new Hud(uiRoot);
     this.mobile = new MobileControls(uiRoot, this.input);
+    this.transition = new Transition(uiRoot);
     this.runtimeFlags = readRuntimeFlags();
 
     this.player = null;
@@ -57,6 +52,10 @@ export class Game {
     // Hit-pause / freeze-frame counter. While > 0 entity updates are skipped
     // (the world freezes). Set via freezePhysics(ms) — used by dash impact.
     this._freezeMs = 0;
+
+    // True while a level-exit fade is playing. Freezes the world and disables
+    // player input (keyboard + mobile) until the next level has loaded.
+    this._transitioning = false;
 
     this.input.on('restart', () => this._handleRestart());
     this.input.on('toggleGodMode', () => this.toggleGodMode());
@@ -80,63 +79,9 @@ export class Game {
     this._gotoMenu();
   }
 
-  _loadLevel(level) {
-    this.entities.clear();
-    this.checkpoints.setSpawn(level.spawn.x, level.spawn.y);
-    const levelBounds = this._deriveLevelBounds(level);
-    this.entities.add(new LevelBackground({ bounds: levelBounds }));
-    for (const obj of level.objects) {
-      switch (obj.type) {
-        case 'platform': this.entities.add(new Platform(obj)); break;
-        case 'wall':     this.entities.add(new Wall(obj)); break;
-        case 'walker':   this.entities.add(new Walker(obj)); break;
-        case 'archer':   this.entities.add(new Archer(obj)); break;
-        case 'flyer':    this.entities.add(new Flyer(obj)); break;
-        case 'arrowPickup': this.entities.add(new ArrowPickup(obj)); break;
-        case 'spike':       this.entities.add(new FallingSpike(obj)); break;
-        case 'checkpoint':  this.entities.add(new Checkpoint(obj)); break;
-        case 'label':       this.entities.add(new LabelSign(obj)); break;
-      }
-    }
-    // Player added last so it renders on top and the static solids are in
-    // place when its first physics query runs.
-    this.player = new Player({ x: level.spawn.x, y: level.spawn.y });
-    this.player.godMode = !!this.debugFlags.godMode;
-    this.entities.add(this.player);
-    this.cameraFollow.setTarget(this.player);
-  }
-
-  _deriveLevelBounds(level) {
-    let minX = Number.POSITIVE_INFINITY;
-    let minY = Number.POSITIVE_INFINITY;
-    let maxX = Number.NEGATIVE_INFINITY;
-    let maxY = Number.NEGATIVE_INFINITY;
-
-    for (const obj of level.objects || []) {
-      if (typeof obj.x !== 'number' || typeof obj.y !== 'number') continue;
-      if (typeof obj.w !== 'number' || typeof obj.h !== 'number') continue;
-      minX = Math.min(minX, obj.x - obj.w / 2);
-      maxX = Math.max(maxX, obj.x + obj.w / 2);
-      minY = Math.min(minY, obj.y - obj.h / 2);
-      maxY = Math.max(maxY, obj.y + obj.h / 2);
-    }
-
-    if (!Number.isFinite(minX) || !Number.isFinite(minY)) {
-      return { minX: -18, maxX: 18, minY: -2, maxY: 52 };
-    }
-
-    const padX = 0.5;
-    const padY = 0.5;
-    return {
-      minX: minX - padX,
-      maxX: maxX + padX,
-      minY: minY - padY,
-      maxY: maxY + padY,
-    };
-  }
-
   _gotoMenu() {
     this.state.set(STATES.MENU);
+    this.audio.stop();
     this.menuTitle.setZooEnabled(this.runtimeFlags.zooEnabled);
     this.menuTitle.show();
     this.tutorialPopup.hide();
@@ -146,9 +91,9 @@ export class Game {
 
   _setLevel(levelId) {
     const level = getLevelById(levelId);
-    this.currentLevelId = levelId;
+    this.currentLevelId = level.id || levelId;
     this.currentLevel = level;
-    this._loadLevel(level);
+    this.levelManager.load(level);
     this.state.set(STATES.PLAYING);
     this.menuTitle.hide();
     this.tutorialPopup.hide();
@@ -157,7 +102,30 @@ export class Game {
   }
 
   startCampaign() {
-    this._setLevel('campaign');
+    this._setLevel(FIRST_LEVEL_ID);
+  }
+
+  // Triggered when the player enters a level's exit door. Plays a pixel fade,
+  // loads the level's nextLevelId off-screen (or returns to menu when null),
+  // then fades back in. The world is frozen and input disabled throughout.
+  advanceLevel() {
+    if (this._transitioning) return;
+    if (!this.state.is(STATES.PLAYING)) return;
+
+    const nextId = this.currentLevel?.nextLevelId || null;
+    this._transitioning = true;
+
+    this.transition.fadeOut(() => {
+      if (nextId) {
+        this._setLevel(nextId);
+      } else {
+        // Last level cleared -> back to the menu.
+        this._gotoMenu();
+      }
+      this.transition.fadeIn(() => {
+        this._transitioning = false;
+      });
+    });
   }
 
   requestStartCampaign() {
@@ -307,6 +275,13 @@ export class Game {
     }
 
     if (this.state.is(STATES.PAUSE)) {
+      this.input.endFrame();
+      return;
+    }
+
+    // Level-exit fade in progress: freeze the world and drain input so neither
+    // keyboard nor mobile presses leak across the transition.
+    if (this._transitioning) {
       this.input.endFrame();
       return;
     }
