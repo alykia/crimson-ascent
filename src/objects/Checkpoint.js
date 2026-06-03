@@ -18,8 +18,13 @@ const CHECKPOINT_VISUAL_SIZE = 1.8;
 const CHECKPOINT_TRIGGER_W = 0.8;
 const CHECKPOINT_TRIGGER_H = 1.4;
 const CHECKPOINT_VISUAL_CENTER_Y = -CHECKPOINT_TRIGGER_H / 2 + CHECKPOINT_VISUAL_SIZE / 2;
-const GLOW_SCALE_MULT = 1.18;
-const ACTIVE_GLOW_OPACITY = 0.52;
+const HALO_DURATION = 0.34;
+const HALO_START_OPACITY = 0.78;
+const HALO_START_SCALE_MULT = 0.9;
+const HALO_END_SCALE_MULT = 1.2;
+const HALO_INNER_RADIUS = 0.82;
+const HALO_OUTER_RADIUS = 1.02;
+const HALO_SOFTNESS = 0.08;
 const PARTICLE_COUNT = 84;
 const BURST_PARTICLE_COUNT = 44;
 const BURST_DURATION = 0.42;
@@ -46,18 +51,53 @@ export class Checkpoint {
     this._baseSprite.scale.set(CHECKPOINT_VISUAL_SIZE, CHECKPOINT_VISUAL_SIZE, 1);
     this._baseSprite.position.set(0, CHECKPOINT_VISUAL_CENTER_Y, 0.35);
 
-    this._glowMat = new THREE.SpriteMaterial({
-      map: getCheckpointTexture(),
+    this._haloGeo = new THREE.RingGeometry(HALO_INNER_RADIUS, HALO_OUTER_RADIUS, 28);
+    this._haloMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uColor: { value: new THREE.Color(COLORS.CHECKPOINT_ACTIVE) },
+        uOpacity: { value: 0 },
+        uInner: { value: HALO_INNER_RADIUS },
+        uOuter: { value: HALO_OUTER_RADIUS },
+        uSoftness: { value: HALO_SOFTNESS },
+      },
+      vertexShader: `
+        varying vec2 vLocal;
+        void main() {
+          vLocal = position.xy;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        uniform float uOpacity;
+        uniform float uInner;
+        uniform float uOuter;
+        uniform float uSoftness;
+        varying vec2 vLocal;
+        void main() {
+          float r = length(vLocal);
+
+          float outerFade = 1.0 - smoothstep(uOuter - uSoftness, uOuter, r);
+          float innerFade = smoothstep(uInner, uInner + uSoftness, r);
+          float ringMask = outerFade * innerFade;
+
+          float mid = (uInner + uOuter) * 0.5;
+          float halfWidth = max(0.0001, (uOuter - uInner) * 0.5);
+          float distNorm = abs(r - mid) / halfWidth;
+          float bandGradient = 1.0 - smoothstep(0.0, 1.0, distNorm);
+
+          float alpha = ringMask * mix(0.35, 1.0, bandGradient) * uOpacity;
+          gl_FragColor = vec4(uColor, alpha);
+        }
+      `,
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      color: COLORS.CHECKPOINT_ACTIVE,
-      opacity: 0.0,
+      side: THREE.DoubleSide,
     });
-    this._glowSprite = new THREE.Sprite(this._glowMat);
-    const glowSize = CHECKPOINT_VISUAL_SIZE * GLOW_SCALE_MULT;
-    this._glowSprite.scale.set(glowSize, glowSize, 1);
-    this._glowSprite.position.set(0, CHECKPOINT_VISUAL_CENTER_Y, 0.34);
+    this._haloMesh = new THREE.Mesh(this._haloGeo, this._haloMat);
+    this._haloMesh.scale.set(HALO_START_SCALE_MULT, HALO_START_SCALE_MULT, 1);
+    this._haloMesh.position.set(0, CHECKPOINT_VISUAL_CENTER_Y, 0.34);
 
     this._particlePhase = new Float32Array(PARTICLE_COUNT);
     this._particleBase = new Float32Array(PARTICLE_COUNT * 3);
@@ -113,10 +153,11 @@ export class Checkpoint {
     this._burstParticles.position.set(0, CHECKPOINT_VISUAL_CENTER_Y + 0.1, 0.5);
     this._burstParticles.visible = false;
     this._burstTimer = 0;
+    this._haloTimer = 0;
 
     this.mesh = new THREE.Group();
     this.mesh.position.set(opts.x, opts.y, 0);
-    this.mesh.add(this._glowSprite);
+    this.mesh.add(this._haloMesh);
     this.mesh.add(this._baseSprite);
     this.mesh.add(this._particles);
     this.mesh.add(this._burstParticles);
@@ -126,14 +167,18 @@ export class Checkpoint {
   setActive(v) {
     this.active = v;
     this._particles.visible = v;
-    this._glowMat.opacity = v ? ACTIVE_GLOW_OPACITY : 0;
+    this._haloMat.uniforms.uOpacity.value = 0;
     this._particleMat.opacity = v ? 0.92 : 0;
-    if (v) this._triggerBurst();
+    if (v) {
+      this._triggerBurst();
+      this._triggerHalo();
+    }
     if (!v) {
       this._baseSprite.scale.set(CHECKPOINT_VISUAL_SIZE, CHECKPOINT_VISUAL_SIZE, 1);
-      const glowSize = CHECKPOINT_VISUAL_SIZE * GLOW_SCALE_MULT;
-      this._glowSprite.scale.set(glowSize, glowSize, 1);
+      this._haloMesh.scale.set(HALO_START_SCALE_MULT, HALO_START_SCALE_MULT, 1);
       this._burstTimer = 0;
+      this._haloTimer = 0;
+      this._haloMat.uniforms.uOpacity.value = 0;
       this._burstMat.opacity = 0;
       this._burstParticles.visible = false;
     }
@@ -141,9 +186,18 @@ export class Checkpoint {
 
   update(dt, game) {
     this._t += dt;
+    if (this._haloTimer > 0) {
+      this._haloTimer = Math.max(0, this._haloTimer - dt);
+      const life = this._haloTimer / HALO_DURATION;
+      const haloScaleMult = THREE.MathUtils.lerp(HALO_END_SCALE_MULT, HALO_START_SCALE_MULT, life);
+      this._haloMesh.scale.set(haloScaleMult, haloScaleMult, 1);
+      this._haloMat.uniforms.uOpacity.value = HALO_START_OPACITY * life;
+      if (this._haloTimer <= 0) {
+        this._haloMesh.scale.set(HALO_START_SCALE_MULT, HALO_START_SCALE_MULT, 1);
+        this._haloMat.uniforms.uOpacity.value = 0;
+      }
+    }
     if (this.active) {
-      const shimmer = 0.46 + Math.sin(this._t * 3.2) * 0.1;
-      this._glowMat.opacity = ACTIVE_GLOW_OPACITY + shimmer;
       this._particleMat.opacity = 0.88 + Math.sin(this._t * 4.6) * 0.1;
       for (let i = 0; i < PARTICLE_COUNT; i++) {
         const i3 = i * 3;
@@ -200,6 +254,12 @@ export class Checkpoint {
     this._burstGeo.attributes.position.needsUpdate = true;
   }
 
+  _triggerHalo() {
+    this._haloTimer = HALO_DURATION;
+    this._haloMat.uniforms.uOpacity.value = HALO_START_OPACITY;
+    this._haloMesh.scale.set(HALO_START_SCALE_MULT, HALO_START_SCALE_MULT, 1);
+  }
+
   onPlayerRespawn() {
     // Sticky: do nothing. Active flag persists across deaths.
     this._t = 0;
@@ -207,7 +267,8 @@ export class Checkpoint {
 
   onRemoved() {
     this._baseMat?.dispose();
-    this._glowMat?.dispose();
+    this._haloGeo?.dispose();
+    this._haloMat?.dispose();
     this._particleGeo?.dispose();
     this._particleMat?.dispose();
     this._burstGeo?.dispose();

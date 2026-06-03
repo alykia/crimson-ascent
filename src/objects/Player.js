@@ -14,6 +14,10 @@ import dashFrame5Url from '../assets/T_Character_Dash05.png';
 import dashFrame6Url from '../assets/T_Character_Dash06.png';
 import jumpFrame0Url from '../assets/T_Character_Jump00.png';
 import jumpFrame1Url from '../assets/T_Character_Jump01.png';
+import walkFrame0Url from '../assets/T_Character_Walk00.png';
+import walkFrame1Url from '../assets/T_Character_Walk01.png';
+import walkFrame2Url from '../assets/T_Character_Walk02.png';
+import walkFrame3Url from '../assets/T_Character_Walk03.png';
 
 // Kinematic AABB driven by handmade physics. Phase 2 implements:
 //   - horizontal accel/decel with separate air values
@@ -117,13 +121,34 @@ export class Player {
         return tex;
       });
     }
+    if (!Player._walkTextures) {
+      const loader = new THREE.TextureLoader();
+      Player._walkTextures = [
+        walkFrame0Url,
+        walkFrame1Url,
+        walkFrame2Url,
+        walkFrame3Url,
+      ].map((url) => {
+        const tex = loader.load(url);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.wrapS = THREE.ClampToEdgeWrapping;
+        tex.wrapT = THREE.ClampToEdgeWrapping;
+        tex.magFilter = THREE.NearestFilter;
+        tex.minFilter = THREE.NearestFilter;
+        return tex;
+      });
+    }
 
     this._idleTextures = Player._idleTextures;
     this._dashTextures = Player._dashTextures;
     this._jumpTextures = Player._jumpTextures;
+    this._walkTextures = Player._walkTextures;
     this._idleFrameIndex = 0;
     this._idleFrameTimerMs = 0;
     this._idleFrameDurationMs = 240;
+    this._walkFrameIndex = 0;
+    this._walkFrameTimerMs = 0;
+    this._walkFrameDurationMs = 120;
     // Keyframe order for dash visual timing. Repeating frame 2 makes the
     // bat form readable for longer during the short dash window.
     this._dashFrameSequence = [0, 1, 2, 2, 2, 2, 3, 4, 5, 6];
@@ -401,6 +426,27 @@ export class Player {
       }
       return;
     }
+
+    // Grounded + moving horizontally: cycle the walk frames. Threshold keeps
+    // tiny residual velocity (deceleration tail) from triggering a walk.
+    const moving = Math.abs(this.vel.x) > 0.6;
+    if (moving && this._walkTextures?.length >= 2) {
+      if (this._mat.map !== this._walkTextures[this._walkFrameIndex]) {
+        this._mat.map = this._walkTextures[this._walkFrameIndex];
+        this._mat.needsUpdate = true;
+      }
+      this._walkFrameTimerMs += dtMs;
+      while (this._walkFrameTimerMs >= this._walkFrameDurationMs) {
+        this._walkFrameTimerMs -= this._walkFrameDurationMs;
+        this._walkFrameIndex = (this._walkFrameIndex + 1) % this._walkTextures.length;
+        this._mat.map = this._walkTextures[this._walkFrameIndex];
+        this._mat.needsUpdate = true;
+      }
+      return;
+    }
+    // Reset so the next walk starts on the first stride.
+    this._walkFrameIndex = 0;
+    this._walkFrameTimerMs = 0;
 
     if (this._mat.map !== this._idleTextures[this._idleFrameIndex]) {
       this._mat.map = this._idleTextures[this._idleFrameIndex];
