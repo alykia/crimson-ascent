@@ -254,9 +254,9 @@ export class Game {
     this.respawn();
   }
 
-  // Triggered by R, death plane, or hp depletion. Resettable entities
-  // (enemies, hazards) get an onPlayerRespawn() hook so they can revive /
-  // retract for the retry.
+  // Triggered by R, death plane, or hp depletion. Resettable entities get an
+  // onPlayerRespawn() hook for retry state (hazards retract, surviving enemies
+  // reset position, defeated enemies stay dead until level reload).
   respawn() {
     if (!this.player) return;
     const p = this.checkpoints.respawnPoint();

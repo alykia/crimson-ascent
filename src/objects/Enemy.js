@@ -7,8 +7,8 @@ import { ENEMY } from '../config/constants.js';
 //   - dashing player + (requireWeakened false OR weakened) -> enemy dies, dash refreshed
 //   - other contact (player not dashing OR enemy not vulnerable) -> player takes damage
 //
-// Per dev plan: enemies stay dead until room reset / player death. onPlayerRespawn
-// (called by Game.respawn) revives them.
+// Dead enemies stay dead until the level is reloaded (or a new level is loaded).
+// onPlayerRespawn only resets enemies that are still alive.
 export class Enemy {
   constructor({ x, y, w, h, color = COLORS.ENEMY }) {
     this.tag = 'enemy';
@@ -53,6 +53,8 @@ export class Enemy {
   }
 
   onPlayerRespawn() {
+    // Keep defeated enemies dead across player retries.
+    if (this.dead) return;
     this.dead = false;
     this.weakened = false;
     this.arrowHp = this.arrowHpMax;
