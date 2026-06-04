@@ -69,6 +69,7 @@ export class Game {
     // True while a level-exit fade is playing. Freezes the world and disables
     // player input (keyboard + mobile) until the next level has loaded.
     this._transitioning = false;
+    this._playMenuOpen = false;
 
     // Pointer pick for the reward chest (works for mouse + touch via pointer
     // events). Taps on mobile controls hit their own DOM nodes, not the canvas.
@@ -87,6 +88,7 @@ export class Game {
       onOpenTutorial: () => this.showTutorialFromMenu(),
       onEnterZoo: () => this.enterZoo(),
     });
+    this._createPlayMenuButton(uiRoot);
     this.tutorialPopup = new TutorialPopup(uiRoot);
 
     this.loop = new Loop(
@@ -98,10 +100,14 @@ export class Game {
   }
 
   _gotoMenu() {
+    this._playMenuOpen = false;
     this.state.set(STATES.MENU);
     this.audio.stop();
     this.menuTitle.setZooEnabled(this.runtimeFlags.zooEnabled);
+    this.menuTitle.setStartLabel('START');
     this.menuTitle.show();
+    this._setPlayMenuButtonVisible(false);
+    this._setPlayMenuButtonOpen(false);
     this.tutorialPopup.hide();
     this.bossHud.hide();
     this.gameComplete.hide();
@@ -115,8 +121,12 @@ export class Game {
     this.currentLevelId = level.id || levelId;
     this.currentLevel = level;
     this.levelManager.load(level);
+    this._playMenuOpen = false;
     this.state.set(STATES.PLAYING);
     this.menuTitle.hide();
+    this.menuTitle.setStartLabel('START');
+    this._setPlayMenuButtonVisible(true);
+    this._setPlayMenuButtonOpen(false);
     this.tutorialPopup.hide();
     // Boss-fight UI starts clean on every level load (boss re-shows its own bar
     // when it triggers). Any leftover chest reference is dropped.
@@ -129,6 +139,58 @@ export class Game {
 
   startCampaign() {
     this._setLevel(FIRST_LEVEL_ID);
+  }
+
+  _createPlayMenuButton(uiRoot) {
+    this.playMenuBtn = document.createElement('button');
+    this.playMenuBtn.type = 'button';
+    this.playMenuBtn.id = 'play-menu-button';
+    this.playMenuBtn.setAttribute('aria-label', 'Open menu');
+    this.playMenuBtn.setAttribute('aria-expanded', 'false');
+    this.playMenuBtn.addEventListener('click', () => this.togglePlayMenu());
+    uiRoot.appendChild(this.playMenuBtn);
+    this._setPlayMenuButtonVisible(false);
+  }
+
+  _setPlayMenuButtonVisible(visible) {
+    if (!this.playMenuBtn) return;
+    this.playMenuBtn.style.display = visible ? 'flex' : 'none';
+  }
+
+  _setPlayMenuButtonOpen(open) {
+    if (!this.playMenuBtn) return;
+    this.playMenuBtn.classList.toggle('open', open);
+    this.playMenuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    this.playMenuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  togglePlayMenu() {
+    if (this._playMenuOpen) {
+      this.closePlayMenu();
+      return;
+    }
+    this.openPlayMenu();
+  }
+
+  openPlayMenu() {
+    if (!this.state.is(STATES.PLAYING) || this._transitioning) return;
+    this._playMenuOpen = true;
+    this._loggedPlayMenuPause = false;
+    this.state.set(STATES.PAUSE);
+    this.menuTitle.setStartLabel('RESTART');
+    this.menuTitle.show();
+    this.mobile.setGameplayEnabled(false);
+    this._setPlayMenuButtonOpen(true);
+  }
+
+  closePlayMenu() {
+    if (!this._playMenuOpen) return;
+    this._playMenuOpen = false;
+    this.state.set(STATES.PLAYING);
+    this.menuTitle.hide();
+    this.menuTitle.setStartLabel('START');
+    this.mobile.setGameplayEnabled(true);
+    this._setPlayMenuButtonOpen(false);
   }
 
   // Triggered when the player enters a level's exit door. Plays a pixel fade,
@@ -178,6 +240,7 @@ export class Game {
     this.state.set(STATES.PAUSE);
     this.bossHud.hide();
     this.mobile.setGameplayEnabled(false);
+    this._setPlayMenuButtonVisible(false);
     this.gameComplete.show();
   }
 
@@ -194,6 +257,12 @@ export class Game {
   }
 
   requestStartCampaign() {
+    if (this._playMenuOpen) {
+      this._playMenuOpen = false;
+      this.startCampaign();
+      return;
+    }
+
     if (this._hasSeenTutorial()) {
       this.startCampaign();
       return;
@@ -208,6 +277,25 @@ export class Game {
   }
 
   showTutorialFromMenu() {
+    if (this._playMenuOpen) {
+      this._setPlayMenuButtonVisible(false);
+      this._openTutorial({
+        onClose: () => {
+          this._markTutorialSeen();
+          this._playMenuOpen = true;
+          this._loggedPlayMenuPause = false;
+          this.state.set(STATES.PAUSE);
+          this.menuTitle.setStartLabel('RESTART');
+          this.menuTitle.show();
+          this.hud.setVisible(true);
+          this.mobile.setGameplayEnabled(false);
+          this._setPlayMenuButtonVisible(true);
+          this._setPlayMenuButtonOpen(true);
+        },
+      });
+      return;
+    }
+
     this._openTutorial({
       onClose: () => {
         this._markTutorialSeen();
@@ -246,6 +334,7 @@ export class Game {
 
   enterZoo() {
     if (!this.runtimeFlags.zooEnabled) return;
+    this._playMenuOpen = false;
     this._setLevel('zoo');
   }
 
@@ -348,6 +437,7 @@ export class Game {
     }
 
     if (this.state.is(STATES.PAUSE)) {
+      if (this._playMenuOpen) this.hud.update(dt, this);
       this.input.endFrame();
       return;
     }

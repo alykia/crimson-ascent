@@ -50,6 +50,7 @@ export class MenuTitle {
 
     const { container: startWrap, button: startBtn } = this._makeButton('START', 'menu-btn-primary');
     startBtn.addEventListener('click', () => this.onStartGame());
+    this.startBtn = startBtn;
     buttonWrap.appendChild(startWrap);
 
     const { container: tutorialWrap, button: tutorialBtn } = this._makeButton('TUTORIAL');
@@ -86,6 +87,10 @@ export class MenuTitle {
   setZooEnabled(enabled) {
     this.zooEnabled = !!enabled;
     this.zooBtnWrap.style.display = this.zooEnabled ? 'block' : 'none';
+  }
+
+  setStartLabel(label) {
+    this.startBtn.textContent = label;
   }
 
   _makeButton(label, extraClass = '') {
