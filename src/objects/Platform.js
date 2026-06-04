@@ -3,11 +3,17 @@ import { COLORS } from '../config/colors.js';
 import platform1SpriteUrl from '../assets/T_Platform1Sprite.png';
 import platform2SpriteUrl from '../assets/T_Platform2_Sprite.png';
 import platform3SpriteUrl from '../assets/T_Platform3_Sprite.png';
+import platformLevel2Sprite1Url from '../assets/T_PlatformLevel2_1_sprite.png';
+import platformLevel2Sprite2Url from '../assets/T_PlatformLevel2_2_sprite.png';
+import platformLevel2Sprite3Url from '../assets/T_PlatformLevel2_3_sprite.png';
 import groundfloorSpriteUrl from '../assets/T_Groundfloor_Sprite.png';
 
 let platform1Texture = null;
 let platform2Texture = null;
 let platform3Texture = null;
+let platformLevel2Texture1 = null;
+let platformLevel2Texture2 = null;
+let platformLevel2Texture3 = null;
 let groundfloorTexture = null;
 
 function getPlatform1Texture() {
@@ -35,6 +41,27 @@ function getPlatform3Texture() {
   platform3Texture.minFilter = THREE.NearestFilter;
   platform3Texture.colorSpace = THREE.SRGBColorSpace;
   return platform3Texture;
+}
+
+function loadNearestTexture(url) {
+  const texture = new THREE.TextureLoader().load(url);
+  texture.magFilter = THREE.NearestFilter;
+  texture.minFilter = THREE.NearestFilter;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function getPlatformLevel2Texture(spriteVariant) {
+  if (spriteVariant === 'platform2') {
+    if (!platformLevel2Texture2) platformLevel2Texture2 = loadNearestTexture(platformLevel2Sprite2Url);
+    return platformLevel2Texture2;
+  }
+  if (spriteVariant === 'platform3') {
+    if (!platformLevel2Texture3) platformLevel2Texture3 = loadNearestTexture(platformLevel2Sprite3Url);
+    return platformLevel2Texture3;
+  }
+  if (!platformLevel2Texture1) platformLevel2Texture1 = loadNearestTexture(platformLevel2Sprite1Url);
+  return platformLevel2Texture1;
 }
 
 function getGroundfloorTexture() {
@@ -82,7 +109,7 @@ const GROUNDFLOOR_SURFACE_Y_NORM = 0.41;
 const GROUNDFLOOR_SURFACE_W_NORM = 0.96;
 
 export class Platform {
-  constructor({ x, y, w, h, spriteVariant = null, spriteFlipX = false }) {
+  constructor({ x, y, w, h, spriteVariant = null, spriteFlipX = false, spriteSet = 'default' }) {
     this.tag = 'platform';
     this.solid = true;
     this.aabb = { x, y, w, h };
@@ -95,6 +122,7 @@ export class Platform {
       spriteVariant === 'platform3' ||
       spriteVariant === 'groundfloor'
     ) {
+      const useLevel2Sprite = spriteSet === 'level2' && spriteVariant !== 'groundfloor';
       const spriteParams = {
         platform1: {
           texture: getPlatform1Texture(),
@@ -132,7 +160,7 @@ export class Platform {
         },
       }[spriteVariant];
       const mat = new THREE.SpriteMaterial({
-        map: spriteParams.texture,
+        map: useLevel2Sprite ? getPlatformLevel2Texture(spriteVariant) : spriteParams.texture,
         transparent: true,
         alphaTest: 0.08,
         depthWrite: false,

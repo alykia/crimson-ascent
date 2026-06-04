@@ -88,6 +88,50 @@ export const HAZARD = Object.freeze({
   SPIKE_RESET_MS: 2200,
 });
 
+// Final dragon boss (Level 2 only). Single source of truth for boss difficulty
+// — tweak these to make the fight easier/harder without touching boss code.
+export const BOSS = Object.freeze({
+  // ---- Health & damage ----
+  // DEMO-FRIENDLY: tuned soft so a first-time player can win. Raise MAX_HP and
+  // lower the cooldowns/telegraphs below to make it harder again.
+  MAX_HP: 34,             // total boss health (raise = longer fight)
+  ARROW_DAMAGE: 3,        // damage per player arrow hit
+  DASH_DAMAGE: 6,         // damage per player dash hit
+  DAMAGE_COOLDOWN_MS: 250, // boss i-frames after a hit (prevents multi-count)
+
+  // ---- Hitbox / movement ----
+  WIDTH: 2.6,
+  HEIGHT: 2.2,
+  MOVE_SPEED: 3.0,        // grounded reposition speed (Phase 1)
+
+  // ---- Flame projectile ----
+  FLAME_W: 0.7,
+  FLAME_H: 0.7,
+  FLAME_SPEED: 7,         // slower = easier to dodge
+  FLAME_LIFETIME_MS: 2600,
+  FLAME_COOLDOWN_MS: 2500,       // base time between flames (Phase 1)
+  FLAME_PHASE2_SCALE: 0.85,      // Phase 2 multiplies the cooldown (faster)
+
+  // ---- Phase thresholds (fraction of MAX_HP) ----
+  PHASE2_HP_FRAC: 0.5,
+  PHASE3_HP_FRAC: 0.15,          // hardest phase only at the very end
+  PHASE3_TIMER_SCALE: 0.85,      // Phase 3 multiplies all cooldowns (faster)
+
+  // ---- Flight (Phase 2+) ----
+  FLY_HEIGHT: 5.0,        // hover height above the arena ground
+  FLY_SPEED: 4.0,         // horizontal tracking speed while flying
+
+  // ---- Dive / ground slam (Phase 2+) ----
+  DIVE_TELEGRAPH_MS: 1200, // warning time before the dive commits
+  DIVE_COOLDOWN_MS: 5200,  // time between dives
+  DIVE_SPEED: 30,          // downward dive speed
+  SLAM_RADIUS: 2.3,        // horizontal danger radius of the slam impact
+  SLAM_LINGER_MS: 260,     // how long the impact stays dangerous
+
+  // ---- Feedback ----
+  DEFEAT_FX_MS: 900,      // defeat flash/shake before the chest appears
+});
+
 export const CAMERA = Object.freeze({
   OFFSET_Y: 4.0,          // camera above player; player sits lower for climb visibility
   DEAD_X: 1.2,

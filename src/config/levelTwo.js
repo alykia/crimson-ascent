@@ -3,20 +3,25 @@
 // Same coordinate system and object types as Level 1 (see level.js for the
 // full schema + physics reachability budget — physics is UNCHANGED here).
 //
-// LEVEL 2 design goals:
-//   - Longer climb (summit ≈ y68 vs Level 1's ≈ y49).
-//   - Tighter, narrower platforms and bigger gaps -> more precise dashes.
-//   - Taller wall-jump chimneys harassed by flyers.
-//   - More spikes, arranged as zig-zag gauntlets.
-//   - More enemies (walker / archer / flyer — same types as Level 1).
-//   - FEWER checkpoints (3 here vs 6 in Level 1) so it stays demanding.
-//   - Still fair and beatable, not impossible.
+// LEVEL 2 design goals (DEMO-FRIENDLY pass — still the longer climb, but now
+// readable and forgiving so a first-time player can reach the dragon):
+//   - Long climb (summit boss arena ≈ y64) but with wide (w≈5) platforms,
+//     2.0-unit steps, and gaps the player never has to "send" blindly.
+//   - Short wall-jump chimneys (≈3 tall) with wide entry/exit shelves.
+//   - Only TWO falling spikes, parked OFF the main path (x ±5.5) over their
+//     own side ledges with a long warning window.
+//   - Same enemy types (walker / archer / flyer) on readable side perches,
+//     never right after a hard jump.
+//   - MANY checkpoints (≈8) — before every section/hazard and the arena.
+//   - Keeps the level2 sprite set + alternating variants/sizes (visuals intact).
 //
 // HOW TO TUNE DIFFICULTY LATER:
 //   - Easier: add checkpoints, widen platforms (bigger w), shrink gaps,
-//     lower spike `triggerH`, remove enemies.
+//     raise spike `triggerH` (earlier warning), remove enemies.
 //   - Harder: remove checkpoints, narrow platforms, widen gaps, add spikes
 //     and enemies, raise chimney height.
+
+import backgroundLevel2Url from '../assets/T_Background2_sprite.png';
 
 const FLOOR_Y   = -1;
 const LEFT_X    = -13;
@@ -29,13 +34,11 @@ export const LEVEL_TWO = {
   title: 'Ascent — Trial 2',
   spawn: { x: 0, y: 2 },
   nextLevelId: null, // last level for now; entering the door returns to menu
+  platformSpriteSet: 'level2',
 
-  // ---- Background: PLAIN PLACEHOLDER (solid color) ----
-  // The final Level 2 backdrop is not ready yet. To swap it in later:
-  //   1. Drop the PNG into src/assets/ (e.g. T_Background2_Sprite.png)
-  //   2. At the top of this file add:  import bg2 from '../assets/T_Background2_Sprite.png';
-  //   3. Replace the line below with:  background: { url: bg2, aspect: <imgW/imgH> },
-  background: { color: 0x141022 },
+  // ---- Background: Level 2 cathedral sprite. ----
+  // Replace this import/path later if you provide another final Level 2 PNG.
+  background: { url: backgroundLevel2Url, aspect: 576 / 1024 },
 
   // ---- Music: own slot, none wired yet. ----
   // To add Level 2 music: drop an .mp3/.ogg into src/assets/, import it, then
@@ -49,98 +52,117 @@ export const LEVEL_TWO = {
     { type: 'wall', x: RIGHT_X, y: LEVEL_TOP / 2, w: 1, h: LEVEL_TOP },
 
     // =============================================================
-    // SECTION 1 — PRECISION OPENER  (y 2 - 12)
-    // Narrow alternating platforms with bigger horizontal swings, a spike to
-    // punish camping, and a walker. First (and only early) checkpoint sits a
-    // bit higher than in Level 1.
+    // SECTION 1 — OPEN OPENER  (y 2 - 11)
+    // Wide (w5) alternating terraces, 2.0 steps, overlapping in x. A walker on
+    // a wide hub teaches the dash. Two early checkpoints.
     // =============================================================
-    { type: 'platform', x: -4, y: 2.2, w: 3,   h: 0.5, spriteVariant: 'platform2' },
-    { type: 'platform', x:  4, y: 4.4, w: 2.6, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
-    { type: 'platform', x: -5, y: 6.6, w: 2.4, h: 0.5, spriteVariant: 'platform2' },
-    { type: 'platform', x:  3, y: 8.8, w: 2.4, h: 0.5, spriteVariant: 'platform3' },
-    { type: 'spike',    x:  3, y: 12, w: 1, h: 1, triggerH: 5 },
-    { type: 'platform', x: -3, y: 11.0, w: 2.6, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
-    { type: 'walker',   x: -3, y: 12.0, dir: 1 },
-    { type: 'checkpoint', x: -3, y: 11.95 },
+    { type: 'platform', x: -4, y: 2.4, w: 5,   h: 0.5, spriteVariant: 'platform1' },
+    { type: 'platform', x:  2, y: 4.4, w: 5,   h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
+    { type: 'checkpoint', x: 2, y: 5.2 },
+    { type: 'platform', x: -3, y: 6.4, w: 5.5, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'platform', x:  3, y: 8.4, w: 5,   h: 0.5, spriteVariant: 'platform1', spriteFlipX: true },
+    { type: 'platform', x: -3, y: 10.4, w: 6,  h: 0.5, spriteVariant: 'platform2' },
+    { type: 'walker',   x: -3, y: 11.4, dir: 1 },
+    { type: 'checkpoint', x: -3, y: 11.2 },
 
     // =============================================================
-    // SECTION 2 — TALL WALL-JUMP CHIMNEY  (y 12 - 22)
-    // 6-unit chimney (near full stamina) with a flyer crowding the climb.
+    // SECTION 2 — SHORT WALL-JUMP CHIMNEY  (y 12 - 16)
+    // 3.2-tall chimney with a wide entry shelf and a wide top shelf. A slow
+    // flyer hovers nearby but does not crowd the climb.
     // =============================================================
-    { type: 'platform', x: 3, y: 13.5, w: 3, h: 0.5, spriteVariant: 'platform1' },
-    { type: 'wall', x: 0.6, y: 18, w: 0.6, h: 6 },
-    { type: 'wall', x: 3.4, y: 18, w: 0.6, h: 6 },
-    { type: 'flyer', x: 2, y: 17, range: 1.0 },
-    { type: 'platform', x: 2, y: 21.5, w: 2.6, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'platform', x: 2, y: 12.4, w: 5, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'wall', x: -0.4, y: 14.0, w: 0.6, h: 3.2 },
+    { type: 'wall', x:  2.4, y: 14.0, w: 0.6, h: 3.2 },
+    { type: 'flyer', x: 1, y: 14.5, range: 1.0 },
+    { type: 'platform', x: 0, y: 15.8, w: 6, h: 0.5, spriteVariant: 'platform1' },
+    { type: 'checkpoint', x: 0, y: 16.6 },
 
     // =============================================================
-    // SECTION 3 — DASH GAUNTLET  (y 22 - 32)
-    // Walker dash-refresh target, then long left/right gaps over spikes.
-    // Mid checkpoint at the top of the section.
+    // SECTION 3 — DASH STAIRCASE  (y 16 - 26)
+    // Gentle 2.0 staircase with a walker dash-target on a wide ledge. No gaps
+    // over hazards. Checkpoint mid-section.
     // =============================================================
-    { type: 'platform', x: 2, y: 23.0, w: 2.6, h: 0.5, spriteVariant: 'platform1', spriteFlipX: true },
-    { type: 'walker',   x: 2, y: 24.0, dir: -1 },
-    { type: 'platform', x:  9, y: 24.5, w: 2.4, h: 0.5, spriteVariant: 'platform2' },
-    { type: 'spike',    x:  9, y: 29, w: 1, h: 1, triggerH: 5 },
-    { type: 'platform', x: -7, y: 26.0, w: 2.4, h: 0.5, spriteVariant: 'platform3' },
-    { type: 'archer',   x: -7, y: 27.0, dir: 1 },
-    { type: 'platform', x: -2, y: 28.0, w: 2.6, h: 0.5, spriteVariant: 'platform2' },
-    { type: 'platform', x:  4, y: 30.0, w: 3,   h: 0.5, spriteVariant: 'platform1' },
-    { type: 'checkpoint', x: 4, y: 30.95 },
+    { type: 'platform', x:  4, y: 17.8, w: 5,   h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
+    { type: 'platform', x: -2, y: 19.8, w: 5.5, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'platform', x:  3, y: 21.8, w: 5,   h: 0.5, spriteVariant: 'platform1' },
+    { type: 'walker',   x:  3, y: 22.8, dir: -1 },
+    { type: 'checkpoint', x: 3, y: 22.6 },
+    { type: 'platform', x: -3, y: 23.8, w: 5.5, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
+    { type: 'platform', x:  2, y: 25.8, w: 5,   h: 0.5, spriteVariant: 'platform3' },
 
     // =============================================================
-    // SECTION 4 — SPIKE ZIG-ZAG  (y 32 - 44)
-    // Four spike columns over narrow stepping platforms, with a flyer
-    // sweeping the middle. No checkpoint here — commit and keep moving.
+    // SECTION 4 — READABLE SPIKES  (y 26 - 35)
+    // TWO spikes parked OFF the central climb (x ±5.5) over their own side
+    // ledges, long warning (triggerH 5). The straight-up path (x ≈ 0) never
+    // passes under a spike. Checkpoint right before.
     // =============================================================
-    { type: 'platform', x: -4, y: 33.5, w: 2.4, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
-    { type: 'spike',    x: -4, y: 38, w: 1, h: 1, triggerH: 5 },
-    { type: 'platform', x:  3, y: 35.5, w: 2.4, h: 0.5, spriteVariant: 'platform3' },
-    { type: 'spike',    x:  3, y: 40, w: 1, h: 1, triggerH: 5 },
-    { type: 'platform', x: -3, y: 37.5, w: 2.4, h: 0.5, spriteVariant: 'platform2' },
-    { type: 'spike',    x: -3, y: 42, w: 1, h: 1, triggerH: 5 },
-    { type: 'platform', x:  4, y: 39.5, w: 2.4, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
-    { type: 'spike',    x:  4, y: 44, w: 1, h: 1, triggerH: 4 },
-    { type: 'flyer',    x: 0, y: 40, range: 3 },
-    { type: 'platform', x: -2, y: 41.5, w: 2.6, h: 0.5, spriteVariant: 'platform2' },
-    { type: 'platform', x:  3, y: 43.5, w: 3,   h: 0.5, spriteVariant: 'platform1' },
+    { type: 'platform', x: 0, y: 27.6, w: 6.5, h: 0.5, spriteVariant: 'platform1' },
+    { type: 'checkpoint', x: 0, y: 28.4 },
+    { type: 'platform', x: -5.5, y: 31.5, w: 3, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
+    { type: 'spike',    x: -5.5, y: 35, w: 1, h: 1, triggerH: 5 },
+    { type: 'platform', x:  5.5, y: 33.5, w: 3, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'spike',    x:  5.5, y: 37, w: 1, h: 1, triggerH: 5 },
+    { type: 'platform', x:  0, y: 29.6, w: 6, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'platform', x:  1, y: 31.6, w: 6, h: 0.5, spriteVariant: 'platform1', spriteFlipX: true },
+    { type: 'platform', x: -1, y: 33.6, w: 6, h: 0.5, spriteVariant: 'platform2' },
 
     // =============================================================
-    // SECTION 5 — COMBINED HARD  (y 44 - 56)
-    // Chimney + flyer + archer, an ammo refill + walker hub, then a long
-    // dash over a spike. Last checkpoint near the top.
+    // SECTION 5 — COMBINED (READABLE)  (y 35 - 48)
+    // A short chimney, an ammo refill + walker hub, and an archer on an
+    // optional side perch. Two checkpoints keep it low-stakes.
     // =============================================================
-    { type: 'platform', x: 3, y: 45.0, w: 3, h: 0.5, spriteVariant: 'platform1' },
-    { type: 'wall', x: 0.8, y: 49, w: 0.6, h: 5 },
-    { type: 'wall', x: 3.6, y: 49, w: 0.6, h: 5 },
-    { type: 'flyer',  x: 2.2, y: 48, range: 1.2 },
-    { type: 'platform', x: 6, y: 46.0, w: 2.4, h: 0.5, spriteVariant: 'platform3' },
-    { type: 'archer',   x: 6, y: 47.0, dir: -1 },
-    { type: 'platform', x: 2.2, y: 52.0, w: 2.6, h: 0.5, spriteVariant: 'platform2' },
-    { type: 'arrowPickup', x: 2.2, y: 53.0, amount: 3 },
-    { type: 'walker',      x: 2.2, y: 53.0, dir: 1 },
-    { type: 'platform', x: -5, y: 53.5, w: 2.4, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
-    { type: 'spike',    x: -5, y: 58, w: 1, h: 1, triggerH: 4 },
-    { type: 'platform', x: 2, y: 55.5, w: 3, h: 0.5, spriteVariant: 'platform1' },
-    { type: 'checkpoint', x: 2, y: 56.45 },
+    { type: 'platform', x: 3, y: 35.6, w: 5, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
+    { type: 'checkpoint', x: 3, y: 36.4 },
+    { type: 'platform', x: -2, y: 37.6, w: 5.5, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'wall', x: -4.4, y: 39.4, w: 0.6, h: 3.0 },
+    { type: 'wall', x: -1.6, y: 39.4, w: 0.6, h: 3.0 },
+    { type: 'flyer', x: -3, y: 39, range: 1.0 },
+    { type: 'platform', x: -3, y: 41.4, w: 6, h: 0.5, spriteVariant: 'platform1' },
+    { type: 'checkpoint', x: -3, y: 42.2 },
+    { type: 'platform', x: 2, y: 43.2, w: 5.5, h: 0.5, spriteVariant: 'platform2' },
+    { type: 'arrowPickup', x: 2, y: 44.1, amount: 3 },
+    { type: 'walker',      x: 2, y: 44.2, dir: 1 },
+    { type: 'platform', x: 6, y: 43.4, w: 4, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
+    { type: 'archer',   x: 6, y: 44.4, dir: -1 },
+    { type: 'platform', x: -2, y: 45.2, w: 5.5, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
+    { type: 'platform', x:  2, y: 47.0, w: 5, h: 0.5, spriteVariant: 'platform1' },
+    { type: 'checkpoint', x: 2, y: 47.8 },
 
     // =============================================================
-    // SECTION 6 — FINAL ASCENT + EXIT  (y 56 - 68)
-    // Tight chimney with a flyer, a spike near the summit, an archer guarding
-    // the last ledge, then the EXIT DOOR on the summit platform.
+    // SECTION 6 — FINAL ASCENT TO THE BOSS ARENA  (y 48 - 64)
+    // A clean alternating staircase (2.0 steps, w5) leads up to a WIDE summit
+    // arena where the dragon waits.
+    //
+    // ARENA NOTES (edit here):
+    //   - The arena platform is wide (w:16) and centered (x:0). Its top surface
+    //     is groundY = y + h/2 = 64.6. Boss combat happens on this surface.
+    //   - It deliberately does NOT reach the side walls (LEFT_X -13 / RIGHT_X 13),
+    //     so there are fall-off gaps on both sides: a missed dodge can drop you
+    //     into the pit (you respawn at the arena checkpoint, boss resets).
+    //   - NO spikes on the arena — the only threat is the boss.
+    //   - The boss object carries `activateAtY` (fight starts when the player
+    //     reaches the arena) and `arena { minX, maxX, groundY }` (its movement
+    //     bounds + the slam/ground height). All boss difficulty lives in the
+    //     BOSS block of src/config/constants.js.
     // =============================================================
-    { type: 'platform', x: 2, y: 57.0, w: 3, h: 0.5, spriteVariant: 'platform1' },
-    { type: 'wall', x: -0.4, y: 61, w: 0.6, h: 5 },
-    { type: 'wall', x:  2.4, y: 61, w: 0.6, h: 5 },
-    { type: 'flyer', x: 1, y: 60, range: 1.0 },
-    { type: 'platform', x: 1, y: 64.0, w: 2.6, h: 0.5, spriteVariant: 'platform3' },
-    { type: 'spike',    x: 1, y: 67, w: 1, h: 1, triggerH: 3 },
-    { type: 'platform', x: -3, y: 65.5, w: 2.4, h: 0.5, spriteVariant: 'platform2' },
-    { type: 'platform', x:  4, y: 65.5, w: 2.4, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
-    { type: 'archer',   x:  4, y: 66.5, dir: -1 },
-    { type: 'platform', x: 0, y: 67.0, w: 5, h: 0.5, spriteVariant: 'platform1' },
+    { type: 'platform', x: -2, y: 49.0, w: 5,   h: 0.5, spriteVariant: 'platform2' },
+    { type: 'platform', x:  2, y: 51.0, w: 5,   h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
+    { type: 'platform', x: -2, y: 53.0, w: 5,   h: 0.5, spriteVariant: 'platform1' },
+    { type: 'platform', x:  2, y: 55.0, w: 5,   h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
+    { type: 'platform', x: -1, y: 57.0, w: 5.5, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'platform', x:  2, y: 59.0, w: 5,   h: 0.5, spriteVariant: 'platform1', spriteFlipX: true },
+    { type: 'platform', x: -1, y: 61.0, w: 5.5, h: 0.5, spriteVariant: 'platform2' },
+    { type: 'platform', x:  1, y: 62.8, w: 5,   h: 0.5, spriteVariant: 'platform3' },
 
-    // ---- EXIT DOOR (returns to menu — nextLevelId is null) ----
-    { type: 'door', x: 0, y: 68.25, w: 1.6, h: 2.6, activateAtY: 63 },
+    // ---- WIDE BOSS ARENA (summit) ----
+    { type: 'platform', x: 0, y: 64, w: 16, h: 1.2, spriteVariant: 'platform1' },
+    { type: 'checkpoint', x: -6, y: 65.0 },
+    {
+      type: 'boss',
+      x: 0,
+      y: 65.7,
+      activateAtY: 64.6,
+      arena: { minX: -8, maxX: 8, groundY: 64.6 },
+    },
   ],
 };

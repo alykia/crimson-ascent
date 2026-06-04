@@ -17,4 +17,12 @@ export const COLORS = Object.freeze({
   ARROW_PICKUP:       0xffd54a, // yellow
   ARROW:              0xffe082,
   DEBUG_HITBOX:       0x00ff88,
+
+  // ---- Final boss placeholders (swap when real sprites arrive) ----
+  BOSS_BODY:          0x6b1f2e, // deep dragon crimson
+  BOSS_BODY_HURT:     0xffb0b0, // flash on hit
+  BOSS_FLAME:         0xff7a1a, // orange flame
+  BOSS_WARNING:       0xff3b3b, // dive telegraph / slam danger
+  REWARD_CHEST:       0x8a5a25, // wood/gold chest
+  REWARD_SWORD:       0xd8e6ff, // steel blade
 });

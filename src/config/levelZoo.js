@@ -4,7 +4,7 @@
 // Spawn starts on a high hub platform; each bay below isolates one concept.
 //
 // Object types:
-//   platform | wall | walker | archer | flyer | arrowPickup | spike | checkpoint | label | door
+//   platform | wall | walker | archer | flyer | arrowPickup | spike | checkpoint | label | door | boss
 
 export const ZOO_LEVEL = {
   id: 'zoo',
@@ -20,6 +20,7 @@ export const ZOO_LEVEL = {
     { id: 'spike', label: 'Spike Bay', x: 9.5, y: 3.2 },
     { id: 'traversal', label: 'Traversal Bay', x: 19, y: 3.2 },
     { id: 'ammo', label: 'Ammo Station', x: 0, y: 25.2 },
+    { id: 'boss', label: 'Boss Arena', x: -6, y: 38.2 },
   ],
   objects: [
     // ---- Global bounds ----
@@ -35,6 +36,23 @@ export const ZOO_LEVEL = {
     { type: 'label', x: 0, y: 32.7, text: 'ZOO HUB: jump into bays, F1 for tools', w: 9.4, h: 0.95 },
     { type: 'door', x: 13, y: 31.4, w: 1.6, h: 2.6, activateAtY: 29.5 },
     { type: 'label', x: 13, y: 33.4, text: 'DOOR TEST: ENTER FOR LEVEL 2', w: 6.8, h: 0.86 },
+
+    // ---- Boss arena smoke test ----
+    // Reach it from the hub stairs or use the Boss Arena debug anchor.
+    // The platform is intentionally narrower than the zoo bounds, so you can
+    // test falling out of the arena and boss reset behavior.
+    { type: 'platform', x: -5, y: 32.8, w: 3.2, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
+    { type: 'platform', x: -2, y: 35.2, w: 3.2, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'platform', x: 0, y: 37.2, w: 16, h: 1.2, spriteVariant: 'platform1' },
+    { type: 'checkpoint', x: -6, y: 38.2 },
+    { type: 'label', x: 0, y: 40.4, text: 'BOSS TEST: ARROWS + DASH, CLICK CHEST AFTER DEFEAT', w: 11.4, h: 0.86 },
+    {
+      type: 'boss',
+      x: 0,
+      y: 38.9,
+      activateAtY: 37.8,
+      arena: { minX: -8, maxX: 8, groundY: 37.8 },
+    },
 
     // ---- Ammo station near spawn hub ----
     { type: 'platform', x: 0, y: 24.6, w: 6, h: 0.6, spriteVariant: 'platform3' },

@@ -9,6 +9,8 @@ import { FallingSpike } from '../objects/Hazard.js';
 import { Checkpoint } from '../objects/Checkpoint.js';
 import { LabelSign } from '../objects/LabelSign.js';
 import { Door } from '../objects/Door.js';
+import { Boss } from '../objects/Boss.js';
+import { ChestReward } from '../objects/ChestReward.js';
 import { LevelBackground } from '../objects/LevelBackground.js';
 
 // LevelManager — the single, reusable level system. Given a level config it
@@ -66,7 +68,10 @@ export class LevelManager {
   _spawnObject(obj) {
     const g = this.game;
     switch (obj.type) {
-      case 'platform':    g.entities.add(new Platform(obj)); break;
+      case 'platform':    g.entities.add(new Platform({
+        ...obj,
+        spriteSet: obj.spriteSet || g.currentLevel?.platformSpriteSet || 'default',
+      })); break;
       case 'wall':        g.entities.add(new Wall(obj)); break;
       case 'walker':      g.entities.add(new Walker(obj)); break;
       case 'archer':      g.entities.add(new Archer(obj)); break;
@@ -76,6 +81,10 @@ export class LevelManager {
       case 'checkpoint':  g.entities.add(new Checkpoint(obj)); break;
       case 'label':       g.entities.add(new LabelSign(obj)); break;
       case 'door':        g.entities.add(new Door(obj)); break;
+      // Boss + chest only ever appear in Level 2's config. The chest is normally
+      // spawned at runtime by the boss on defeat; the case is here for parity.
+      case 'boss':        g.entities.add(new Boss(obj)); break;
+      case 'chest':       g.entities.add(new ChestReward(obj)); break;
       default: break;
     }
   }

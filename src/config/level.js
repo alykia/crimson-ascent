@@ -53,93 +53,93 @@ export const LEVEL = {
     { type: 'wall', x: RIGHT_X, y: LEVEL_TOP / 2, w: 1, h: LEVEL_TOP },
 
     // =============================================================
-    // SECTION 1 — OPEN TERRACES  (y 0 - 10)
-    // Completely rebuilt from the circled screenshot area. This route no
-    // longer stacks platforms over narrow vertical walls; it sweeps left to
-    // right through roomy, readable landings above the spawn.
+    // SECTION 1 — OPEN TERRACES  (y 2 - 9)
+    // Demo pass: four wide (w6) terraces, exactly 2.0 apart, overlapping in x
+    // so the next landing is always under the player and on-screen. No gaps to
+    // miss; this just teaches the jump.
     // =============================================================
-    { type: 'platform', x: -5.0, y: 2.4, w: 4.6, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
-    { type: 'platform', x: -0.5, y: 4.6, w: 4.8, h: 0.5, spriteVariant: 'platform1' },
-    { type: 'platform', x:  5.0, y: 6.7, w: 4.4, h: 0.5, spriteVariant: 'platform3' },
-    { type: 'platform', x:  0.8, y: 8.8, w: 5.0, h: 0.5, spriteVariant: 'platform2' },
-    { type: 'checkpoint', x: 0.8, y: 9.75 },
+    { type: 'platform', x: -4.0, y: 2.2, w: 6, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
+    { type: 'platform', x:  2.0, y: 4.2, w: 6, h: 0.5, spriteVariant: 'platform1' },
+    { type: 'platform', x: -3.0, y: 6.2, w: 6, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'platform', x:  2.0, y: 8.2, w: 6, h: 0.5, spriteVariant: 'platform2' },
+    { type: 'checkpoint', x: 2.0, y: 9.0 },
 
     // =============================================================
-    // SECTION 2 — LEFT-SIDE WALL JUMP TUTORIAL  (y 10 - 16)
-    // Wall-jump teaching is moved away from the old cramped middle stack.
-    // The walls are shorter, offset to the left, and have a large top shelf.
+    // SECTION 2 — LEFT-SIDE WALL JUMP TUTORIAL  (y 10 - 15)
+    // Short chimney (3.0 tall) with a wide entry shelf and a wide top shelf.
+    // A checkpoint at the BASE means a missed wall jump never costs progress.
     // =============================================================
-    { type: 'platform', x: -4.2, y: 10.6, w: 4.4, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
-    { type: 'wall', x: -7.0, y: 13.2, w: 0.6, h: 3.4 },
-    { type: 'wall', x: -4.3, y: 13.2, w: 0.6, h: 3.4 },
-    { type: 'platform', x: -5.65, y: 15.2, w: 4.6, h: 0.5, spriteVariant: 'platform1' },
-    { type: 'checkpoint', x: -5.65, y: 16.15 },
+    { type: 'platform', x: -4.0, y: 10.2, w: 6, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
+    { type: 'checkpoint', x: -4.0, y: 11.0 },
+    { type: 'wall', x: -7.0, y: 12.6, w: 0.6, h: 3.0 },
+    { type: 'wall', x: -4.3, y: 12.6, w: 0.6, h: 3.0 },
+    { type: 'platform', x: -5.5, y: 14.4, w: 6, h: 0.5, spriteVariant: 'platform1' },
+    { type: 'checkpoint', x: -5.5, y: 15.2 },
 
     // =============================================================
-    // SECTION 3 — DASH INTRODUCTION  (y 15 - 22)
-    // Walker on a hub platform + a moderate gap (≈7 units) to clear with a
-    // dash. A left-side bailout ledge smooths failed attempts.
+    // SECTION 3 — DASH INTRODUCTION  (y 16 - 23)
+    // Wide walker hub (a safe dash-kill target) then a gentle 2.0 staircase.
+    // No forced long gap; dash is taught on the walker, not over a pit.
     // =============================================================
-    { type: 'platform', x: -1.0, y: 17.0, w: 5, h: 0.5, spriteVariant: 'platform1', spriteFlipX: true },
-    { type: 'walker',   x: -1.0, y: 18.0, dir: 1 },
-    { type: 'platform', x:  7, y: 17.0, w: 3.5, h: 0.5, spriteVariant: 'platform2' },
-    { type: 'platform', x: -6, y: 18.0, w: 3,   h: 0.5, spriteVariant: 'platform3' },
-    { type: 'platform', x: -2, y: 19.5, w: 4,   h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
-    { type: 'platform', x:  3, y: 21.3, w: 5,   h: 0.5, spriteVariant: 'platform1' },
-    { type: 'checkpoint', x: 3, y: 22.25 },
+    { type: 'platform', x: -1.0, y: 16.4, w: 6, h: 0.5, spriteVariant: 'platform1', spriteFlipX: true },
+    { type: 'walker',   x: -1.0, y: 17.4, dir: 1 },
+    { type: 'checkpoint', x: -1.0, y: 17.2 },
+    { type: 'platform', x:  4.0, y: 18.4, w: 5, h: 0.5, spriteVariant: 'platform2' },
+    { type: 'platform', x: -2.0, y: 20.4, w: 6, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
+    { type: 'platform', x:  3.0, y: 22.2, w: 6, h: 0.5, spriteVariant: 'platform1' },
+    { type: 'checkpoint', x: 3.0, y: 23.0 },
 
     // =============================================================
-    // SECTION 4 — ARROW USAGE  (y 22 - 30)
-    // Pickup first, then an archer perch and a slow flyer with roomy ledges
-    // to retreat to. Both still require weakening before a dash-kill.
+    // SECTION 4 — ARROW USAGE  (y 23 - 32)
+    // Pickup first, then a SLOW flyer (range 2.0) over the central path and an
+    // archer parked on a side perch (optional). Wide retreat ledges everywhere.
     // =============================================================
-    { type: 'platform', x: 3, y: 23.4, w: 5, h: 0.5, spriteVariant: 'platform1' },
-    { type: 'arrowPickup', x: 2, y: 24.4, amount: 3 },
-    { type: 'platform', x:  6, y: 25.4, w: 3.5, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
-    { type: 'archer',   x:  6, y: 26.4, dir: -1 },
-    { type: 'flyer',    x: -1, y: 27.4, range: 2.5 },
-    { type: 'platform', x: -4,   y: 26.4, w: 4, h: 0.5, spriteVariant: 'platform2' },
-    { type: 'platform', x: -1.5, y: 28.4, w: 4, h: 0.5, spriteVariant: 'platform3' },
-    { type: 'platform', x:  3,   y: 30.0, w: 5, h: 0.5, spriteVariant: 'platform1' },
-    { type: 'checkpoint', x: 3, y: 30.95 },
+    { type: 'platform', x:  3.0, y: 23.6, w: 6, h: 0.5, spriteVariant: 'platform1' },
+    { type: 'arrowPickup', x: 2.0, y: 24.5, amount: 3 },
+    { type: 'platform', x: -2.0, y: 25.6, w: 6, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
+    { type: 'flyer',    x:  0.0, y: 27.4, range: 2.0 },
+    { type: 'platform', x:  6.0, y: 26.2, w: 4, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
+    { type: 'archer',   x:  6.0, y: 27.2, dir: -1 },
+    { type: 'platform', x:  2.0, y: 27.6, w: 6, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'platform', x: -1.0, y: 29.6, w: 6, h: 0.5, spriteVariant: 'platform2' },
+    { type: 'platform', x:  2.0, y: 31.4, w: 6, h: 0.5, spriteVariant: 'platform1', spriteFlipX: true },
+    { type: 'checkpoint', x: 2.0, y: 32.2 },
 
     // =============================================================
-    // SECTION 5 — FALLING SPIKES  (y 30 - 38)
-    // Only TWO spike columns (was three) with short trigger zones and wide
-    // safe landings between them. Easy to read and avoid.
+    // SECTION 5 — FALLING SPIKES  (y 32 - 38)
+    // Two spikes parked OFF the central climb (x ±5) over their own side
+    // ledges, with a long warning window (triggerH 5). The straight-up path
+    // (x 0) never passes under a spike. Even 2.0 steps out of the checkpoint.
     // =============================================================
-    { type: 'platform', x: -3, y: 31.8, w: 4, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
-    { type: 'spike',    x: -3, y: 36, w: 1, h: 1, triggerH: 4 },
-
-    { type: 'platform', x:  3, y: 33.8, w: 4, h: 0.5, spriteVariant: 'platform3' },
-    { type: 'spike',    x:  3, y: 38, w: 1, h: 1, triggerH: 4 },
-
-    { type: 'platform', x: -3, y: 35.8, w: 4, h: 0.5, spriteVariant: 'platform2' },
-
-    { type: 'platform', x: 3, y: 37.6, w: 5, h: 0.5, spriteVariant: 'platform1', spriteFlipX: true },
-    { type: 'checkpoint', x: 3, y: 38.55 },
+    { type: 'platform', x:  0.0, y: 33.4, w: 6, h: 0.5, spriteVariant: 'platform2' },
+    { type: 'platform', x: -5.0, y: 33.4, w: 3, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
+    { type: 'spike',    x: -5.0, y: 36.9, w: 1, h: 1, triggerH: 5 },
+    { type: 'platform', x:  0.0, y: 35.4, w: 6, h: 0.5, spriteVariant: 'platform1' },
+    { type: 'platform', x:  5.0, y: 35.4, w: 3, h: 0.5, spriteVariant: 'platform2' },
+    { type: 'spike',    x:  5.0, y: 38.9, w: 1, h: 1, triggerH: 5 },
+    { type: 'platform', x:  2.0, y: 37.4, w: 6, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
+    { type: 'checkpoint', x: 2.0, y: 38.2 },
 
     // =============================================================
-    // SECTION 6 — OPEN STAIR CLIMB + EXIT  (y 38 - 49)
-    // Rebuilt to avoid the awkward wall/ceiling interaction near the
-    // checkpoint. This is now a clean, readable staircase: no wall-jump walls,
-    // no tight underside hop, and each landing gives the player room to reset.
+    // SECTION 6 — OPEN STAIR CLIMB + EXIT  (y 38 - 48)
+    // Clean alternating staircase (2.0 steps, w6). Walker + archer sit on side
+    // ledges OFF the main path. Wide pre-exit platform with a checkpoint right
+    // before the door.
     // =============================================================
-    { type: 'platform', x: -2.8, y: 40.0, w: 4.8, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
-    { type: 'platform', x:  4.2, y: 42.0, w: 4.8, h: 0.5, spriteVariant: 'platform3' },
-    { type: 'platform', x: -2.2, y: 44.0, w: 4.8, h: 0.5, spriteVariant: 'platform2' },
-    { type: 'platform', x:  2.4, y: 45.2, w: 4.6, h: 0.5, spriteVariant: 'platform1', spriteFlipX: true },
-    { type: 'platform', x:  6, y: 45.4, w: 3.5, h: 0.5, spriteVariant: 'platform2' },
-    { type: 'walker',   x:  6, y: 46.4, dir: -1 },
-    { type: 'platform', x: -5, y: 45.4, w: 3.5, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
-    { type: 'archer',   x: -5, y: 46.4, dir: 1 },
-    { type: 'platform', x: 0, y: 47, w: 6, h: 0.5, spriteVariant: 'platform1' },
-    { type: 'platform', x: -3.5, y: 48.2, w: 4, h: 0.5, spriteVariant: 'platform3' },
-    { type: 'checkpoint', x: -3.5, y: 49.15 },
+    { type: 'platform', x: -2.5, y: 39.4, w: 6, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
+    { type: 'platform', x:  3.0, y: 41.4, w: 6, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'platform', x: -2.0, y: 43.4, w: 6, h: 0.5, spriteVariant: 'platform1', spriteFlipX: true },
+    { type: 'platform', x:  6.0, y: 43.8, w: 3.5, h: 0.5, spriteVariant: 'platform2' },
+    { type: 'walker',   x:  6.0, y: 44.8, dir: -1 },
+    { type: 'platform', x:  2.5, y: 45.4, w: 6, h: 0.5, spriteVariant: 'platform2' },
+    { type: 'platform', x: -5.0, y: 45.4, w: 3.5, h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
+    { type: 'archer',   x: -5.0, y: 46.4, dir: 1 },
+    { type: 'platform', x:  0.0, y: 47.0, w: 7, h: 0.5, spriteVariant: 'platform1' },
+    { type: 'checkpoint', x: 0.0, y: 47.8 },
 
     // ---- EXIT DOOR (to Level 2) ----
     // Edit x/y to move it; activateAtY is the height the player must reach
     // before the door appears and becomes enterable.
-    { type: 'door', x: 0, y: 48.25, w: 1.6, h: 2.6, activateAtY: 44 },
+    { type: 'door', x: 0, y: 48.35, w: 1.6, h: 2.6, activateAtY: 44 },
   ],
 };

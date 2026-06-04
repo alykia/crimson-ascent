@@ -123,6 +123,98 @@ html, body {
   transition: opacity 380ms steps(6, end);
 }
 
+/* ---- Boss health bar (top-right, hidden by default) ---- */
+#boss-hud {
+  position: absolute;
+  top: max(10px, calc(var(--safe-top) + 10px));
+  right: max(12px, calc(var(--safe-right) + 12px));
+  width: min(42%, 240px);
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  pointer-events: none;
+  z-index: 16;
+}
+
+.boss-hud-label {
+  font: 400 clamp(8px, 1.9vw, 11px) 'Determination', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #f4dede;
+  text-shadow: 0 0 8px rgba(181, 28, 50, 0.8), 0 1px 2px #000;
+}
+
+.boss-hud-track {
+  width: 100%;
+  height: clamp(7px, 1.6vw, 10px);
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+}
+
+.boss-hud-fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #e23a52 0%, #b51c32 55%, #7f0816 100%);
+  /* steps() keeps the drain chunky/pixel-styled. */
+  transition: width 180ms steps(8, end);
+}
+
+/* ---- Game Complete popup (mirrors the menu look) ---- */
+#game-complete {
+  position: absolute;
+  inset: 0;
+  z-index: 26;
+  display: none;
+  place-items: center;
+  padding: max(16px, calc(var(--safe-top) + 12px)) max(14px, calc(var(--safe-right) + 14px)) max(16px, calc(var(--safe-bottom) + 12px)) max(14px, calc(var(--safe-left) + 14px));
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.92);
+  box-sizing: border-box;
+}
+
+#game-complete.visible {
+  display: grid;
+}
+
+.game-complete-panel {
+  position: relative;
+  width: min(calc(var(--play-width) - 34px), 420px);
+  padding: clamp(26px, 6vw, 44px) clamp(20px, 5vw, 36px);
+  background:
+    linear-gradient(135deg, rgba(216, 173, 85, 0.18), transparent 16%, transparent 84%, rgba(181, 28, 50, 0.22)),
+    linear-gradient(180deg, rgba(4, 7, 17, 0.62), rgba(2, 3, 8, 0.86)),
+    rgba(5, 8, 17, 0.97);
+  box-shadow:
+    0 0 28px rgba(119, 184, 255, 0.2),
+    0 24px 70px rgba(0, 0, 0, 0.6);
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.game-complete-title {
+  margin: 0 0 10px;
+  color: #fff4f5;
+  font: 800 clamp(26px, 7vw, 40px)/1 'Determination', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(181, 28, 50, 0.72), 0 0 22px rgba(119, 184, 255, 0.28);
+}
+
+.game-complete-subtitle {
+  margin: 0 auto clamp(20px, 5vw, 30px);
+  max-width: 300px;
+  color: #b9d5f3;
+  font: 500 clamp(12px, 3vw, 14px)/1.5 'Determination', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  letter-spacing: 0.06em;
+}
+
+.game-complete-actions {
+  display: grid;
+  gap: 10px;
+}
+
 #debug-overlay {
   position: absolute;
   top: max(8px, calc(var(--safe-top) + 8px));
