@@ -5,7 +5,18 @@ export const WORLD = Object.freeze({
   VIEW_HEIGHT: 22,        // visible world units, vertical extent (orthographic)
   GRAVITY: -75,           // units / s^2 (negative = down)
   MAX_FALL_SPEED: -36,    // terminal velocity
-  DEATH_Y: -20,           // below this -> respawn
+  DEATH_Y: -20,           // below this -> respawn (hard backstop)
+  // A long fall sends the player back to their last checkpoint. Because each
+  // level has a full-width ground floor, a fall would otherwise just land the
+  // player at the bottom; once they drop this many units BELOW their current
+  // respawn point we treat it as a fall and respawn. (raise = more lenient)
+  FALL_RESPAWN_DROP: 5,
+  // Respawn the player slightly ABOVE the checkpoint/spawn marker. Markers sit
+  // at standing height, so respawning exactly on one leaves the player's feet a
+  // hair inside the platform; the X-axis collision pass (which runs before Y)
+  // then ejects the embedded player sideways off the ledge. Spawning a touch
+  // higher lets them drop cleanly onto the surface instead.
+  RESPAWN_LIFT: 0.6,
 });
 
 export const PLAYER = Object.freeze({

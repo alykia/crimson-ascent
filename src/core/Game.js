@@ -260,7 +260,10 @@ export class Game {
   respawn() {
     if (!this.player) return;
     const p = this.checkpoints.respawnPoint();
-    this.player.respawn(p.x, p.y);
+    // Lift slightly so the player drops onto the platform instead of spawning
+    // embedded in it (an embedded spawn gets ejected sideways by the X-axis
+    // collision pass and flung off the ledge).
+    this.player.respawn(p.x, p.y + WORLD.RESPAWN_LIFT);
     this.player.godMode = !!this.debugFlags.godMode;
     this.entities.forEach(e => { if (e.onPlayerRespawn) e.onPlayerRespawn(); });
     // Clear any boss projectiles / dive markers immediately so none linger into
@@ -373,9 +376,16 @@ export class Game {
       this.input.endFrame();
       return;
     }
-    // Fell off the world.
-    if (this.player && this.player.aabb.y < WORLD.DEATH_Y) {
-      this.respawn();
+    // Fell: send the player back to their last activated checkpoint. The level
+    // has a full-width ground floor, so a fall would otherwise strand them at
+    // the bottom. Trigger once they drop well below their current respawn point
+    // (or past the hard death plane as a backstop).
+    if (this.player) {
+      const rp = this.checkpoints.respawnPoint();
+      if (this.player.aabb.y < rp.y - WORLD.FALL_RESPAWN_DROP ||
+          this.player.aabb.y < WORLD.DEATH_Y) {
+        this.respawn();
+      }
     }
 
     this.cameraFollow.update(dt);

@@ -149,6 +149,7 @@ export const LEVEL_TWO = {
     { type: 'platform', x:  2, y: 51.0, w: 5,   h: 0.5, spriteVariant: 'platform3', spriteFlipX: true },
     { type: 'platform', x: -2, y: 53.0, w: 5,   h: 0.5, spriteVariant: 'platform1' },
     { type: 'platform', x:  2, y: 55.0, w: 5,   h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
+    { type: 'checkpoint', x: 2, y: 55.8 },
     { type: 'platform', x: -1, y: 57.0, w: 5.5, h: 0.5, spriteVariant: 'platform3' },
     { type: 'platform', x:  2, y: 59.0, w: 5,   h: 0.5, spriteVariant: 'platform1', spriteFlipX: true },
     { type: 'platform', x: -1, y: 61.0, w: 5.5, h: 0.5, spriteVariant: 'platform2' },

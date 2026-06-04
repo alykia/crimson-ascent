@@ -129,6 +129,7 @@ export const LEVEL = {
     { type: 'platform', x: -2.5, y: 39.4, w: 6, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
     { type: 'platform', x:  3.0, y: 41.4, w: 6, h: 0.5, spriteVariant: 'platform3' },
     { type: 'platform', x: -2.0, y: 43.4, w: 6, h: 0.5, spriteVariant: 'platform1', spriteFlipX: true },
+    { type: 'checkpoint', x: -2.0, y: 44.2 },
     { type: 'platform', x:  6.0, y: 43.8, w: 3.5, h: 0.5, spriteVariant: 'platform2' },
     { type: 'walker',   x:  6.0, y: 44.8, dir: -1 },
     { type: 'platform', x:  2.5, y: 45.4, w: 6, h: 0.5, spriteVariant: 'platform2' },
