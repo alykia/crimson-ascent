@@ -3,6 +3,7 @@ import { COLORS } from '../config/colors.js';
 import { PLAYER, WORLD } from '../config/constants.js';
 import { Ghost } from './Ghost.js';
 import { Arrow } from './Arrow.js';
+import { audio } from '../systems/SfxManager.js';
 import idleFrame0Url from '../assets/T_CharacterChibi_Idle00.png';
 import idleFrame1Url from '../assets/T_CharacterChibi_Idle01.png';
 import dashFrame0Url from '../assets/T_Character_Dash00.png';
@@ -243,6 +244,7 @@ export class Player {
       this._mat.map = this._dashTextures[0];
       this._mat.needsUpdate = true;
       this._spawnGhost(game);
+      audio.playSfx('dash');
     }
 
     if (this.dashMsLeft > 0) {
@@ -296,6 +298,7 @@ export class Player {
         this.vel.y = PLAYER.JUMP_VELOCITY;
         this.coyoteMs = 0;
         this.jumpBufferMs = 0;
+        audio.playSfx('jump');
       } else if ((this.wallL || this.wallR) && this.wallStamina > 0) {
         const dir = this.wallL ? +1 : -1; // push AWAY from the wall
         this.vel.x = dir * PLAYER.WALL_JUMP_VX;
@@ -305,11 +308,13 @@ export class Player {
         this._wallStickDir = dir;
         this.facing = dir;
         this.jumpBufferMs = 0;
+        audio.playSfx('jump'); // wall jump reuses the jump sound (no separate asset)
       } else if (this._airJumpAvailable) {
         // Bonus mid-air jump refunded by an air dash. Single-use.
         this.vel.y = PLAYER.JUMP_VELOCITY;
         this._airJumpAvailable = false;
         this.jumpBufferMs = 0;
+        audio.playSfx('jump');
       }
     }
 
@@ -350,6 +355,7 @@ export class Player {
       this.vel.y = PLAYER.JUMP_VELOCITY;
       this._airJumpAvailable = false;
       this.jumpBufferMs = 0;
+      audio.playSfx('jump');
     }
 
     // Re-probe walls (the X-pass already detected lateral hits, but we want a
@@ -522,6 +528,7 @@ export class Player {
     });
     game.entities.add(arrow);
     this.ammo = Math.max(0, this.ammo - 1);
+    audio.playSfx('arrowShoot');
   }
 
   // Apply damage. fromDir = sign of (source.x - player.x): +1 means source is
@@ -537,6 +544,9 @@ export class Player {
     this.vel.y = PLAYER.KNOCKBACK_VY;
     this.dashMsLeft = 0;
     this.wallStickMs = 0;
+    // Fires only here, after the i-frame/dash/god-mode early returns above, so
+    // it never spams during invincibility or on no-damage contact.
+    audio.playSfx('playerHit');
     return true;
   }
 

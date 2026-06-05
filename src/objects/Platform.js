@@ -7,6 +7,7 @@ import platformLevel2Sprite1Url from '../assets/T_PlatformLevel2_1_sprite.png';
 import platformLevel2Sprite2Url from '../assets/T_PlatformLevel2_2_sprite.png';
 import platformLevel2Sprite3Url from '../assets/T_PlatformLevel2_3_sprite.png';
 import groundfloorSpriteUrl from '../assets/T_Groundfloor_Sprite.png';
+import bossPlatformSpriteUrl from '../assets/T_PlatformBoss_sprite.png';
 
 let platform1Texture = null;
 let platform2Texture = null;
@@ -15,6 +16,7 @@ let platformLevel2Texture1 = null;
 let platformLevel2Texture2 = null;
 let platformLevel2Texture3 = null;
 let groundfloorTexture = null;
+let bossPlatformTexture = null;
 
 function getPlatform1Texture() {
   if (platform1Texture) return platform1Texture;
@@ -80,6 +82,16 @@ function getGroundfloorTexture() {
   return groundfloorTexture;
 }
 
+function getBossPlatformTexture() {
+  if (bossPlatformTexture) return bossPlatformTexture;
+  bossPlatformTexture = loadNearestTexture(bossPlatformSpriteUrl);
+  // Source is square with transparent margins; crop to the visible platform art.
+  bossPlatformTexture.repeat.set(1, 133 / 384);
+  bossPlatformTexture.offset.set(0, 121 / 384);
+  bossPlatformTexture.needsUpdate = true;
+  return bossPlatformTexture;
+}
+
 const PLATFORM1_WIDTH_MULT = 0.75;
 const PLATFORM1_MIN_SIZE = 2.8;
 const PLATFORM1_MAX_SIZE = 6.0;
@@ -108,6 +120,9 @@ const GROUNDFLOOR_MAX_HEIGHT = 4.2;
 const GROUNDFLOOR_SURFACE_Y_NORM = 0.41;
 const GROUNDFLOOR_SURFACE_W_NORM = 0.96;
 
+const BOSS_PLATFORM_ASPECT = 384 / 133;
+const BOSS_PLATFORM_SURFACE_Y_NORM = 0.81;
+
 export class Platform {
   constructor({ x, y, w, h, spriteVariant = null, spriteFlipX = false, spriteSet = 'default' }) {
     this.tag = 'platform';
@@ -120,7 +135,8 @@ export class Platform {
       spriteVariant === 'platform1' ||
       spriteVariant === 'platform2' ||
       spriteVariant === 'platform3' ||
-      spriteVariant === 'groundfloor'
+      spriteVariant === 'groundfloor' ||
+      spriteVariant === 'bossPlatform'
     ) {
       const useLevel2Sprite = spriteSet === 'level2' && spriteVariant !== 'groundfloor';
       const spriteParams = {
@@ -157,6 +173,16 @@ export class Platform {
           maxHeight: GROUNDFLOOR_MAX_HEIGHT,
           surfaceNorm: GROUNDFLOOR_SURFACE_Y_NORM,
           surfaceWidthNorm: GROUNDFLOOR_SURFACE_W_NORM,
+        },
+        bossPlatform: {
+          texture: getBossPlatformTexture(),
+          widthMult: 1,
+          minSize: 10,
+          maxSize: 30,
+          aspect: BOSS_PLATFORM_ASPECT,
+          maxHeight: 9,
+          surfaceNorm: BOSS_PLATFORM_SURFACE_Y_NORM,
+          surfaceWidthNorm: 1,
         },
       }[spriteVariant];
       const mat = new THREE.SpriteMaterial({

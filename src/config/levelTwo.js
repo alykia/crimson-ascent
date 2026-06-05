@@ -22,6 +22,7 @@
 //     and enemies, raise chimney height.
 
 import backgroundLevel2Url from '../assets/T_Background2_sprite.png';
+import level2MusicUrl from '../assets/audio/music/gothic_torque.mp3';
 
 const FLOOR_Y   = -1;
 const LEFT_X    = -13;
@@ -40,10 +41,8 @@ export const LEVEL_TWO = {
   // Replace this import/path later if you provide another final Level 2 PNG.
   background: { url: backgroundLevel2Url, aspect: 576 / 1024 },
 
-  // ---- Music: own slot, none wired yet. ----
-  // To add Level 2 music: drop an .mp3/.ogg into src/assets/, import it, then
-  //   music: { url: level2MusicUrl, volume: 0.6 },
-  music: { url: null, volume: 0.6 },
+  // ---- Music: "Gothic Torque" (looping). Swap the imported file to change it. ----
+  music: { url: level2MusicUrl, volume: 1.0 },
 
   objects: [
     // ---- Global bounds ----
@@ -134,8 +133,8 @@ export const LEVEL_TWO = {
     // arena where the dragon waits.
     //
     // ARENA NOTES (edit here):
-    //   - The arena platform is wide (w:16) and centered (x:0). Its top surface
-    //     is groundY = y + h/2 = 64.6. Boss combat happens on this surface.
+    //   - The arena platform is wide (w:25) and centered (x:0). Its top surface
+    //     is groundY = y + h/2 = 62.6. Boss combat happens on this surface.
     //   - It deliberately does NOT reach the side walls (LEFT_X -13 / RIGHT_X 13),
     //     so there are fall-off gaps on both sides: a missed dodge can drop you
     //     into the pit (you respawn at the arena checkpoint, boss resets).
@@ -153,17 +152,18 @@ export const LEVEL_TWO = {
     { type: 'platform', x: -1, y: 57.0, w: 5.5, h: 0.5, spriteVariant: 'platform3' },
     { type: 'platform', x:  2, y: 59.0, w: 5,   h: 0.5, spriteVariant: 'platform1', spriteFlipX: true },
     { type: 'platform', x: -1, y: 61.0, w: 5.5, h: 0.5, spriteVariant: 'platform2' },
-    { type: 'platform', x:  1, y: 62.8, w: 5,   h: 0.5, spriteVariant: 'platform3' },
+    { type: 'platform', x: -6.5, y: 61.6, w: 4, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'platform', x: -10.2, y: 62.0, w: 3.8, h: 0.5, spriteVariant: 'platform2' },
 
     // ---- WIDE BOSS ARENA (summit) ----
-    { type: 'platform', x: 0, y: 64, w: 16, h: 1.2, spriteVariant: 'platform1' },
-    { type: 'checkpoint', x: -6, y: 65.0 },
+    { type: 'platform', x: 0, y: 62.0, w: 25, h: 1.2, spriteVariant: 'bossPlatform' },
+    { type: 'checkpoint', x: -9.5, y: 63.0 },
     {
       type: 'boss',
       x: 0,
-      y: 65.7,
-      activateAtY: 64.6,
-      arena: { minX: -8, maxX: 8, groundY: 64.6 },
+      y: 63.7,
+      activateAtY: 62.6,
+      arena: { minX: -12.5, maxX: 12.5, groundY: 62.6 },
     },
   ],
 };

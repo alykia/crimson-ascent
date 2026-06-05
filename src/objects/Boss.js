@@ -395,6 +395,10 @@ export class Boss {
     this._state = STATE.DEFEAT_FX;
     this._fxMs = BOSS.DEFEAT_FX_MS;
     this._dive = DIVE.NONE;
+    // Boss death is intentionally left silent (the regular enemyDeath SFX is
+    // not reused here). To add a custom boss-death sound later: import
+    // `audio` from '../systems/SfxManager.js', add a 'bossDeath' entry to
+    // SFX_FILES, and call audio.playSfx('bossDeath') here.
     this._diveWarning = null;
     // Stop attacks + clear every active flame and warning.
     for (const e of game.entities.filter(

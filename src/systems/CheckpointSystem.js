@@ -1,3 +1,5 @@
+import { audio } from './SfxManager.js';
+
 // Tracks the current respawn point. Checkpoints are one-shot activations:
 // once touched, they stay visibly active for the rest of the current run.
 // `active` means "latest respawn point", not "the only lit checkpoint".
@@ -28,6 +30,9 @@ export class CheckpointSystem {
     this.activated.add(checkpoint);
     this.active = checkpoint;
     if (checkpoint.setActive) checkpoint.setActive(true);
+    // Guarded by the early return above -> plays only on first activation,
+    // never when re-passing an already-unlocked checkpoint.
+    audio.playSfx('checkpointUnlock');
   }
 
   respawnPoint() {

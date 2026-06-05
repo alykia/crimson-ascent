@@ -27,6 +27,7 @@
 // checkpoints so beginners can learn jump / wall-jump / dash / shoot safely.
 
 import backgroundLevel1Url from '../assets/T_Background1_Sprite.png';
+import level1MusicUrl from '../assets/audio/music/glass_crypt.mp3';
 
 const FLOOR_Y   = -1;
 const LEFT_X    = -12;
@@ -43,8 +44,8 @@ export const LEVEL = {
   // ---- Background: Level 1 keeps the existing parallax sprite. ----
   background: { url: backgroundLevel1Url, aspect: 941 / 1672 },
 
-  // ---- Music: none wired yet. Drop a file + import and set { url, volume }. ----
-  music: null,
+  // ---- Music: "Glass Crypt" (looping). Swap the imported file to change it. ----
+  music: { url: level1MusicUrl, volume: 1.0 },
 
   objects: [
     // ---- Global bounds ----

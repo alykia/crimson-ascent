@@ -38,7 +38,7 @@ export class Arrow {
       depthWrite: false,
     });
     this.mesh = new THREE.Sprite(this._material);
-    this.mesh.scale.set(1.0, 0.32, 1);
+    this.mesh.scale.set(1.25, 0.4, 1);
     this.mesh.position.set(x, y, 0.45);
     this._material.rotation = Math.atan2(vy, vx);
   }

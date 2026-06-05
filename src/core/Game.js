@@ -9,6 +9,7 @@ import { CameraFollow } from '../systems/CameraFollow.js';
 import { CheckpointSystem } from '../systems/CheckpointSystem.js';
 import { LevelManager } from '../systems/LevelManager.js';
 import { AudioManager } from '../systems/AudioManager.js';
+import { audio as sfx } from '../systems/SfxManager.js';
 import { Hud } from '../ui/Hud.js';
 import { BossHud } from '../ui/BossHud.js';
 import { MobileControls } from '../ui/MobileControls.js';
@@ -39,6 +40,10 @@ export class Game {
     this.cameraFollow = new CameraFollow(this.renderer.camera);
     this.checkpoints = new CheckpointSystem();
     this.audio = new AudioManager();
+    // Sound effects (kept separate from music). Begin decoding now; the manager
+    // resumes its audio context on the first user gesture (mobile/desktop).
+    this.sfx = sfx;
+    this.sfx.loadSfx();
     this.levelManager = new LevelManager(this);
     this.hud = new Hud(uiRoot);
     this.bossHud = new BossHud(uiRoot);
@@ -87,6 +92,14 @@ export class Game {
       onStartGame: () => this.requestStartCampaign(),
       onOpenTutorial: () => this.showTutorialFromMenu(),
       onEnterZoo: () => this.enterZoo(),
+      sfxMuted: this.sfx.sfxMuted,
+      sfxVolume: this.sfx.sfxVolume,
+      musicMuted: this.audio.musicMuted,
+      musicVolume: this.audio.musicVolume,
+      onToggleSfxMute: () => this.sfx.toggleSfxMute(),
+      onToggleMusicMute: () => this.audio.toggleMusicMute(),
+      onSetSfxVolume: (v) => this.sfx.setSfxVolume(v),
+      onSetMusicVolume: (v) => this.audio.setMusicVolume(v),
     });
     this._createPlayMenuButton(uiRoot);
     this.tutorialPopup = new TutorialPopup(uiRoot);
@@ -353,6 +366,7 @@ export class Game {
     // embedded in it (an embedded spawn gets ejected sideways by the X-axis
     // collision pass and flung off the ledge).
     this.player.respawn(p.x, p.y + WORLD.RESPAWN_LIFT);
+    this.sfx.playSfx('checkpointRespawn');
     this.player.godMode = !!this.debugFlags.godMode;
     this.entities.forEach(e => { if (e.onPlayerRespawn) e.onPlayerRespawn(); });
     // Clear any boss projectiles / dive markers immediately so none linger into

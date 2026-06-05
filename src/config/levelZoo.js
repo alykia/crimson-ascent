@@ -20,7 +20,7 @@ export const ZOO_LEVEL = {
     { id: 'spike', label: 'Spike Bay', x: 9.5, y: 3.2 },
     { id: 'traversal', label: 'Traversal Bay', x: 19, y: 3.2 },
     { id: 'ammo', label: 'Ammo Station', x: 0, y: 25.2 },
-    { id: 'boss', label: 'Boss Arena', x: -6, y: 38.2 },
+    { id: 'boss', label: 'Boss Arena', x: -9.5, y: 36.4 },
   ],
   objects: [
     // ---- Global bounds ----
@@ -41,17 +41,20 @@ export const ZOO_LEVEL = {
     // Reach it from the hub stairs or use the Boss Arena debug anchor.
     // The platform is intentionally narrower than the zoo bounds, so you can
     // test falling out of the arena and boss reset behavior.
-    { type: 'platform', x: -5, y: 32.8, w: 3.2, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
-    { type: 'platform', x: -2, y: 35.2, w: 3.2, h: 0.5, spriteVariant: 'platform3' },
-    { type: 'platform', x: 0, y: 37.2, w: 16, h: 1.2, spriteVariant: 'platform1' },
-    { type: 'checkpoint', x: -6, y: 38.2 },
-    { type: 'label', x: 0, y: 40.4, text: 'BOSS TEST: ARROWS + DASH, CLICK CHEST AFTER DEFEAT', w: 11.4, h: 0.86 },
+    { type: 'platform', x: -3.5, y: 31.0, w: 8, h: 0.5, spriteVariant: 'platform1' },
+    { type: 'platform', x: -6.8, y: 32.0, w: 8, h: 0.5, spriteVariant: 'platform2', spriteFlipX: true },
+    { type: 'platform', x: -9.2, y: 33.0, w: 8, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'platform', x: -10.2, y: 34.0, w: 8, h: 0.5, spriteVariant: 'platform2' },
+    { type: 'platform', x: -8.0, y: 35.0, w: 10, h: 0.5, spriteVariant: 'platform3' },
+    { type: 'platform', x: 0, y: 35.2, w: 25, h: 1.2, spriteVariant: 'bossPlatform' },
+    { type: 'checkpoint', x: -9.5, y: 36.4 },
+    { type: 'label', x: 0, y: 39.2, text: 'BOSS TEST: ARROWS + DASH, CLICK CHEST AFTER DEFEAT', w: 11.4, h: 0.86 },
     {
       type: 'boss',
       x: 0,
-      y: 38.9,
-      activateAtY: 37.8,
-      arena: { minX: -8, maxX: 8, groundY: 37.8 },
+      y: 36.9,
+      activateAtY: 35.8,
+      arena: { minX: -12.5, maxX: 12.5, groundY: 35.8 },
     },
 
     // ---- Ammo station near spawn hub ----

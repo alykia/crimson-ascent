@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { COLORS } from '../config/colors.js';
 import { ENEMY } from '../config/constants.js';
+import { audio } from '../systems/SfxManager.js';
 
 // Base for all enemy types. Subclasses set their own hitbox + update logic.
 // Combat rules (resolved in Game._resolveCombat):
@@ -41,6 +42,9 @@ export class Enemy {
     if (this.dead) return;
     this.dead = true;
     this.mesh.visible = false;
+    // Single chokepoint for all enemy deaths (dash-kill + arrow-kill, every
+    // enemy type). The boss is not an Enemy, so it is unaffected here.
+    audio.playSfx('enemyDeath');
   }
 
   // Player arrows chip enemies down; at 0 HP they die. For enemies that require
