@@ -26,6 +26,8 @@ import playerHitUrl from '../assets/audio/sfx/player_hit.wav';
 import enemyDeathUrl from '../assets/audio/sfx/enemy_death.wav';
 import checkpointUnlockUrl from '../assets/audio/sfx/checkpoint_unlock.wav';
 import checkpointRespawnUrl from '../assets/audio/sfx/checkpoint_respawn.wav';
+import chestOpenUrl from '../assets/audio/sfx/chest_open.wav';
+import swordRevealUrl from '../assets/audio/sfx/sword_reveal.wav';
 
 // The single source of truth for sound key -> file URL.
 const SFX_FILES = {
@@ -36,6 +38,8 @@ const SFX_FILES = {
   enemyDeath: enemyDeathUrl,
   checkpointUnlock: checkpointUnlockUrl,
   checkpointRespawn: checkpointRespawnUrl,
+  chestOpen: chestOpenUrl,
+  swordReveal: swordRevealUrl,
 };
 
 const VOLUME_KEY = 'crimson_ascent_sfx_volume';

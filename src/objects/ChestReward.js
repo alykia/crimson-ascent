@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { SwordReward } from './SwordReward.js';
+import { audio } from '../systems/SfxManager.js';
 
 // ---- SWAP-IN SLOT FOR A FINAL CHEST SPRITE ------------------------------
 // Set to an imported PNG url to use real chest art:
@@ -10,7 +11,14 @@ const rewardChestSprite = null;
 
 const WIDTH = 1.6;
 const HEIGHT = 1.3;
-const REVEAL_MS = 950; // sword shows, THEN the Game Complete popup fires
+// Reward beat timing (ms). Both are measured from the moment the chest is
+// clicked/tapped open. Adjust these to retune the sequence:
+//   click -> chestOpen sfx + lid opens
+//   +SWORD_REVEAL_DELAY_MS  -> sword appears + swordReveal sfx
+//   +GAME_COMPLETE_POPUP_DELAY_MS -> Game Complete popup (so the player sees
+//                                    the sword reward first)
+const SWORD_REVEAL_DELAY_MS = 350;
+const GAME_COMPLETE_POPUP_DELAY_MS = 1800;
 
 let closedTex = null;
 let openTex = null;
@@ -80,8 +88,9 @@ export class ChestReward {
     this.interactable = true;
     this.aabb = { x, y, w: WIDTH, h: HEIGHT };
     this._opened = false;
-    this._revealMs = 0;
+    this._swordRevealed = false;
     this._collected = false;
+    this._openMs = 0; // elapsed time since the chest was opened
     this._t = 0;
 
     this._mat = new THREE.SpriteMaterial({
@@ -107,11 +116,13 @@ export class ChestReward {
     if (this._opened) return;
     this._opened = true;
     this.interactable = false;
+    // Beat 1: the chest clicks open.
     this._mat.map = getChestTexture(true);
     this._mat.needsUpdate = true;
-    this._revealMs = REVEAL_MS;
-    // Reveal the sword rising out of the chest.
-    game.entities.add(new SwordReward({ x: this.aabb.x, y: this.aabb.y + 1.4 }));
+    this._openMs = 0;
+    audio.playSfx('chestOpen');
+    // The sword reveal (beat 2) and the Game Complete popup are scheduled in
+    // update() so the player gets a clear reward moment first.
   }
 
   update(dt, game) {
@@ -121,9 +132,19 @@ export class ChestReward {
       this._mat.opacity = 0.85 + Math.sin(this._t * 4) * 0.15;
       return;
     }
-    if (this._collected) return;
-    this._revealMs -= dt * 1000;
-    if (this._revealMs <= 0) {
+
+    this._openMs += dt * 1000;
+
+    // Beat 2: the sword rises out of the chest (once).
+    if (!this._swordRevealed && this._openMs >= SWORD_REVEAL_DELAY_MS) {
+      this._swordRevealed = true;
+      game.entities.add(new SwordReward({ x: this.aabb.x, y: this.aabb.y + 1.4 }));
+      audio.playSfx('swordReveal');
+    }
+
+    // Beat 3: after a beat so the sword is clearly seen, hand off to the
+    // Game Complete popup (once).
+    if (!this._collected && this._openMs >= GAME_COMPLETE_POPUP_DELAY_MS) {
       this._collected = true;
       if (game.onSwordCollected) game.onSwordCollected();
     }

@@ -147,6 +147,7 @@ export class Boss {
     this._flameCdMs = BOSS.FLAME_COOLDOWN_MS;
     this._diveCdMs = BOSS.DIVE_COOLDOWN_MS;
     this._dashContactGraceMs = 0;
+    this._dashContactSafeUntilSeparate = false;
     this._hurtMs = 0;
     this._fxMs = 0;
     this._t = 0;
@@ -423,7 +424,17 @@ export class Boss {
     }
 
     // Contact with the player.
-    if (Physics.overlap(this.aabb, p.aabb)) {
+    const touchingPlayer = Physics.overlap(this.aabb, p.aabb);
+    if (!touchingPlayer) {
+      // After a dash hit, do not allow normal touch damage again until the
+      // player has actually separated from the boss hitbox. This is more robust
+      // than a timer because the dragon is large and hit-pause can leave the
+      // player overlapping for longer than expected.
+      this._dashContactSafeUntilSeparate = false;
+      return;
+    }
+
+    if (touchingPlayer) {
       // Boss updates can run before Player.update consumes this frame's dash
       // input. Treat a just-pressed, available dash as a dash hit too, otherwise
       // pressing dash while already overlapping the boss could still damage the
@@ -432,6 +443,7 @@ export class Boss {
       const dashing = p.dashMsLeft > 0 || dashStartingThisFrame;
       if (dashing) {
         this._dashContactGraceMs = DASH_CONTACT_GRACE_MS;
+        this._dashContactSafeUntilSeparate = true;
         p.dashInvulnMs = Math.max(p.dashInvulnMs || 0, PLAYER.DASH_INVULN_GRACE_MS);
         // Dash attack: damage the boss, refresh the player's dash, hit-pause.
         // The player takes NO contact damage on a dashing hit.
@@ -441,10 +453,10 @@ export class Boss {
           p.dashMsLeft = 0;
           game.freezePhysics(PLAYER.DASH_FREEZE_MS);
         }
-      } else if (this._dashContactGraceMs > 0) {
-        // The dash impact cancels the dash for feedback, but the large boss
-        // hitbox can still overlap for a few frames. Do not turn that into
-        // immediate contact damage.
+      } else if (this._dashContactSafeUntilSeparate || this._dashContactGraceMs > 0) {
+        // A dash impact cancels the dash for feedback, but the large boss hitbox
+        // can keep overlapping. Do not turn that same dash-contact into damage;
+        // contact damage is restored only after the player separates first.
         return;
       } else {
         // Normal touch hurts the player (their i-frames prevent repeats).
@@ -552,6 +564,7 @@ export class Boss {
     this._flameCdMs = BOSS.FLAME_COOLDOWN_MS;
     this._diveCdMs = BOSS.DIVE_COOLDOWN_MS;
     this._dashContactGraceMs = 0;
+    this._dashContactSafeUntilSeparate = false;
     this._dive = DIVE.NONE;
     this._diveWarning = null;
     this._flyFrameIndex = 0;
