@@ -1,24 +1,40 @@
 import * as THREE from 'three';
-import { COLORS } from '../config/colors.js';
 import { BOSS } from '../config/constants.js';
 import { Physics } from '../systems/Physics.js';
+import fireballFrame0Url from '../assets/T_DragonBoss_Fireball00.png';
+import fireballFrame1Url from '../assets/T_DragonBoss_Fireball01.png';
+import fireballFrame2Url from '../assets/T_DragonBoss_Fireball02.png';
+import fireballFrame3Url from '../assets/T_DragonBoss_Fireball03.png';
+import fireballFrame4Url from '../assets/T_DragonBoss_Fireball04.png';
+import fireballFrame5Url from '../assets/T_DragonBoss_Fireball05.png';
 
 // ---- SWAP-IN SLOT FOR A FINAL FLAME SPRITE ------------------------------
-// Set to an imported PNG url to use real flame art:
-//   import flameUrl from '../assets/T_BossFlame_sprite.png';
-//   const bossFlameSprite = flameUrl;
-const bossFlameSprite = null;
+const FIREBALL_ASPECT = 250 / 166;
+const FIREBALL_VISUAL_H = BOSS.FLAME_H * 1.6;
+const FIREBALL_VISUAL_W = FIREBALL_VISUAL_H * FIREBALL_ASPECT;
 // -------------------------------------------------------------------------
 
-let flameTexture = null;
-function getFlameTexture() {
-  if (!bossFlameSprite) return null;
-  if (flameTexture) return flameTexture;
-  flameTexture = new THREE.TextureLoader().load(bossFlameSprite);
-  flameTexture.magFilter = THREE.NearestFilter;
-  flameTexture.minFilter = THREE.NearestFilter;
-  flameTexture.colorSpace = THREE.SRGBColorSpace;
-  return flameTexture;
+let flameTextures = null;
+function getFlameTextures() {
+  if (flameTextures) return flameTextures;
+  const loader = new THREE.TextureLoader();
+  flameTextures = [
+    fireballFrame0Url,
+    fireballFrame1Url,
+    fireballFrame2Url,
+    fireballFrame3Url,
+    fireballFrame4Url,
+    fireballFrame5Url,
+  ].map((url) => {
+    const tex = loader.load(url);
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.NearestFilter;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = THREE.ClampToEdgeWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
+    return tex;
+  });
+  return flameTextures;
 }
 
 // Boss flame projectile. Travels along a fixed velocity (aimed at the player at
@@ -32,18 +48,21 @@ export class Flame {
     this.vel = { x: vx, y: vy };
     this._lifeMs = BOSS.FLAME_LIFETIME_MS;
     this._t = 0;
+    this._frameIndex = 0;
+    this._frameTimerMs = 0;
+    this._frameDurationMs = 75;
+    this._textures = getFlameTextures();
 
-    const tex = getFlameTexture();
     this._mat = new THREE.SpriteMaterial({
-      map: tex,
-      color: COLORS.BOSS_FLAME,
+      map: this._textures[0],
+      color: 0xffffff,
       transparent: true,
-      alphaTest: tex ? 0.1 : 0,
+      alphaTest: 0.02,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
     });
+    this._mat.rotation = Math.atan2(vy, vx);
     this.mesh = new THREE.Sprite(this._mat);
-    this.mesh.scale.set(BOSS.FLAME_W * 1.6, BOSS.FLAME_H * 1.6, 1);
+    this.mesh.scale.set(FIREBALL_VISUAL_W, FIREBALL_VISUAL_H, 1);
     this.mesh.position.set(x, y, 0.46);
   }
 
@@ -81,11 +100,20 @@ export class Flame {
       }
     }
 
-    // Flicker for a bit of life.
-    const flick = 1 + Math.sin(this._t * 26) * 0.12;
-    this.mesh.scale.set(BOSS.FLAME_W * 1.6 * flick, BOSS.FLAME_H * 1.6 * flick, 1);
+    this._updateSpriteAnimation(dt * 1000);
+    this.mesh.scale.set(FIREBALL_VISUAL_W, FIREBALL_VISUAL_H, 1);
     this.mesh.position.x = this.aabb.x;
     this.mesh.position.y = this.aabb.y;
+  }
+
+  _updateSpriteAnimation(dtMs) {
+    this._frameTimerMs += dtMs;
+    while (this._frameTimerMs >= this._frameDurationMs) {
+      this._frameTimerMs -= this._frameDurationMs;
+      this._frameIndex = (this._frameIndex + 1) % this._textures.length;
+      this._mat.map = this._textures[this._frameIndex];
+      this._mat.needsUpdate = true;
+    }
   }
 
   // Cleared when the player dies/respawns so old flames never linger.
