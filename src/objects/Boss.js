@@ -18,6 +18,12 @@ const bossDragonSprite = dragonBossSpriteUrl;
 const DRAGON_VISUAL_Y_OFFSET = 0.45;
 const DASH_CONTACT_GRACE_MS = 220;
 
+// Dragon art faces right in the source files. Positive X scale keeps it facing
+// right; negative X scale mirrors it to face left.
+function dragonScaleX(facing, scale = 1) {
+  return BOSS.WIDTH * 1.6 * scale * (facing >= 0 ? 1 : -1);
+}
+
 function loadDragonTexture(url) {
   const texture = new THREE.TextureLoader().load(url);
   texture.magFilter = THREE.NearestFilter;
@@ -222,7 +228,7 @@ export class Boss {
       this._mat.opacity = k;
       this._mat.color.setHex(Math.sin(this._t * 40) > 0 ? COLORS.BOSS_BODY_HURT : 0xffffff);
       const s = 1 + (1 - k) * 0.3;
-      this.mesh.scale.set(BOSS.WIDTH * 1.6 * s * this._facing, BOSS.HEIGHT * 1.6 * s, 1);
+      this.mesh.scale.set(dragonScaleX(this._facing, s), BOSS.HEIGHT * 1.6 * s, 1);
       if (this._fxMs <= 0) {
         this._state = STATE.DEFEATED;
         this.mesh.visible = false;
@@ -519,8 +525,8 @@ export class Boss {
   _syncMesh(bob) {
     this.mesh.position.x = this.aabb.x;
     this.mesh.position.y = this.aabb.y + DRAGON_VISUAL_Y_OFFSET + (bob || 0);
-    // Face the player by flipping the sprite horizontally.
-    this.mesh.scale.x = BOSS.WIDTH * 1.6 * (this._facing >= 0 ? -1 : 1);
+    // Face the player. Source art faces right, so mirror only when facing left.
+    this.mesh.scale.x = dragonScaleX(this._facing);
   }
 
   // Reset for a retry — UNLESS already defeated (then the fight is over).
