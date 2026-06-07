@@ -6,12 +6,21 @@
 // Object types:
 //   platform | wall | walker | archer | flyer | arrowPickup | spike | checkpoint | label | door | boss
 
+import bossMusicUrl from '../assets/audio/music/cursed_riffblood.mp3';
+
 export const ZOO_LEVEL = {
   id: 'zoo',
   name: 'zoo',
   title: 'Developer Zoo',
   spawn: { x: 0, y: 31.2 },
   nextLevelId: 'level2',
+
+  // ---- Boss theme for the arena smoke test (plays during the fight only). ----
+  bossMusic: { url: bossMusicUrl, volume: 1.0 },
+
+  // ---- Boss-test shortcut (on-screen "Boss Test" button): drop just below the
+  // one-way arena deck so the jump-through + trigger can be tested repeatedly. ----
+  bossTestSpawn: { x: -8, y: 35.85 },
   debugAnchors: [
     { id: 'hub', label: 'Hub', x: 0, y: 31.2 },
     { id: 'walker', label: 'Walker Bay', x: -19, y: 3.2 },
@@ -46,7 +55,7 @@ export const ZOO_LEVEL = {
     { type: 'platform', x: -9.2, y: 33.0, w: 8, h: 0.5, spriteVariant: 'platform3' },
     { type: 'platform', x: -10.2, y: 34.0, w: 8, h: 0.5, spriteVariant: 'platform2' },
     { type: 'platform', x: -8.0, y: 35.0, w: 10, h: 0.5, spriteVariant: 'platform3' },
-    { type: 'platform', x: 0, y: 35.2, w: 25, h: 1.2, spriteVariant: 'bossPlatform' },
+    { type: 'platform', x: 0, y: 35.2, w: 25, h: 1.2, spriteVariant: 'bossPlatform', oneWay: true },
     { type: 'checkpoint', x: -9.5, y: 36.4 },
     { type: 'label', x: 0, y: 39.2, text: 'BOSS TEST: ARROWS + DASH, CLICK CHEST AFTER DEFEAT', w: 11.4, h: 0.86 },
     {

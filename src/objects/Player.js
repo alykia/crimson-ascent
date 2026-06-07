@@ -63,6 +63,7 @@ export class Player {
     this._trailTimerMs = 0;
     this._wasDashing = false;
     this._dashWasAirborne = false;
+    this.dashInvulnMs = 0;
     // Refunded by an air dash: lets the player jump once more mid-air after
     // the dash ends. Consumed on use, cleared on ground touch.
     this._airJumpAvailable = false;
@@ -190,6 +191,7 @@ export class Player {
     this._wallStickDir = 0;
     this.wallStamina = this.wallStaminaMax;
     this.dashMsLeft = 0;
+    this.dashInvulnMs = 0;
     this.canDash = true;
     this._wasDashing = false;
     this._dashWasAirborne = false;
@@ -208,6 +210,7 @@ export class Player {
     if (this.jumpBufferMs > 0) this.jumpBufferMs = Math.max(0, this.jumpBufferMs - dtMs);
     if (this.wallStickMs > 0)  this.wallStickMs = Math.max(0, this.wallStickMs - dtMs);
     if (this.iframeMs > 0)     this.iframeMs = Math.max(0, this.iframeMs - dtMs);
+    if (this.dashInvulnMs > 0) this.dashInvulnMs = Math.max(0, this.dashInvulnMs - dtMs);
 
     if (input.justPressed.jump) {
       this.jumpBufferMs = PLAYER.JUMP_BUFFER_MS;
@@ -236,6 +239,7 @@ export class Player {
     // (set in the grounded branch below) and on enemy hit (Phase 5).
     if (input.justPressed.dash && this.canDash && this.dashMsLeft <= 0) {
       this.dashMsLeft = PLAYER.DASH_DURATION_MS;
+      this.dashInvulnMs = Math.max(this.dashInvulnMs, PLAYER.DASH_DURATION_MS + PLAYER.DASH_INVULN_GRACE_MS);
       this.canDash = false;
       this._dashDir = this.facing || 1;
       this._trailTimerMs = 0;
@@ -533,11 +537,12 @@ export class Player {
 
   // Apply damage. fromDir = sign of (source.x - player.x): +1 means source is
   // to the right, knockback pushes player left. Ignored during iframes or
-  // while dashing (dash is treated as invulnerable per dev plan).
+  // while dashing or during the brief post-dash grace window.
   damage(fromDir = 1) {
     if (this.godMode) return false;
     if (this.iframeMs > 0) return false;
     if (this.dashMsLeft > 0) return false;
+    if (this.dashInvulnMs > 0) return false;
     this.hp = Math.max(0, this.hp - 1);
     this.iframeMs = PLAYER.IFRAME_MS;
     this.vel.x = -Math.sign(fromDir || 1) * PLAYER.KNOCKBACK_VX;

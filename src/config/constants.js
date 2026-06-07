@@ -55,6 +55,7 @@ export const PLAYER = Object.freeze({
   // ground touch (see Player._airJumpAvailable).
   DASH_SPEED: 19,
   DASH_DURATION_MS: 100,
+  DASH_INVULN_GRACE_MS: 180, // short protection during/after dash contact
   DASH_FREEZE_MS: 55,     // hit-pause on successful enemy hit
 
   // Health / damage (Phase 4)
@@ -105,7 +106,7 @@ export const BOSS = Object.freeze({
   // ---- Health & damage ----
   // DEMO-FRIENDLY: tuned soft so a first-time player can win. Raise MAX_HP and
   // lower the cooldowns/telegraphs below to make it harder again.
-  MAX_HP: 34,             // total boss health (raise = longer fight)
+  MAX_HP: 50,             // total boss health (raise = longer fight)
   ARROW_DAMAGE: 3,        // damage per player arrow hit
   DASH_DAMAGE: 6,         // damage per player dash hit
   DAMAGE_COOLDOWN_MS: 250, // boss i-frames after a hit (prevents multi-count)

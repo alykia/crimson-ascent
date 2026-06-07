@@ -1,14 +1,12 @@
 import * as THREE from 'three';
 import { COLORS } from '../config/colors.js';
+import swordLevel2SpriteUrl from '../assets/T_SwordLevel2_sprite.png';
 
 // ---- SWAP-IN SLOT FOR A FINAL SWORD SPRITE ------------------------------
-// Set to an imported PNG url to use real sword art:
-//   import swordUrl from '../assets/T_RewardSword_sprite.png';
-//   const rewardSwordSprite = swordUrl;
-const rewardSwordSprite = null;
+const rewardSwordSprite = swordLevel2SpriteUrl;
 // -------------------------------------------------------------------------
 
-const WIDTH = 0.9;
+const WIDTH = 2.0;
 const HEIGHT = 2.0;
 
 let swordTex = null;

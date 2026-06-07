@@ -23,6 +23,7 @@
 
 import backgroundLevel2Url from '../assets/T_Background2_sprite.png';
 import level2MusicUrl from '../assets/audio/music/gothic_torque.mp3';
+import bossMusicUrl from '../assets/audio/music/cursed_riffblood.mp3';
 
 const FLOOR_Y   = -1;
 const LEFT_X    = -13;
@@ -43,6 +44,11 @@ export const LEVEL_TWO = {
 
   // ---- Music: "Gothic Torque" (looping). Swap the imported file to change it. ----
   music: { url: level2MusicUrl, volume: 1.0 },
+
+  // ---- Boss theme: "Cursed Riffblood" (looping). Plays only during the boss
+  // fight (started by Boss._activate, stopped on defeat/death). Swap the
+  // imported file above to replace it. ----
+  bossMusic: { url: bossMusicUrl, volume: 1.0 },
 
   objects: [
     // ---- Global bounds ----
@@ -156,7 +162,9 @@ export const LEVEL_TWO = {
     { type: 'platform', x: -10.2, y: 62.0, w: 3.8, h: 0.5, spriteVariant: 'platform2' },
 
     // ---- WIDE BOSS ARENA (summit) ----
-    { type: 'platform', x: 0, y: 62.0, w: 25, h: 1.2, spriteVariant: 'bossPlatform' },
+    // One-way deck: the player jumps UP through it from the staircase below and
+    // lands on top; it is solid only from above (see Physics.moveAndCollide).
+    { type: 'platform', x: 0, y: 62.0, w: 25, h: 1.2, spriteVariant: 'bossPlatform', oneWay: true },
     { type: 'checkpoint', x: -9.5, y: 63.0 },
     {
       type: 'boss',

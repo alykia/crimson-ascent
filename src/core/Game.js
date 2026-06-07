@@ -102,6 +102,7 @@ export class Game {
       onSetMusicVolume: (v) => this.audio.setMusicVolume(v),
     });
     this._createPlayMenuButton(uiRoot);
+    this._createBossTestButton(uiRoot);
     this.tutorialPopup = new TutorialPopup(uiRoot);
 
     this.loop = new Loop(
@@ -125,6 +126,7 @@ export class Game {
     this.bossHud.hide();
     this.gameComplete.hide();
     this.activeChest = null;
+    this._setBossTestButtonVisible(false);
     this.hud.setVisible(false);
     this.mobile.setGameplayEnabled(false);
   }
@@ -146,6 +148,8 @@ export class Game {
     this.bossHud.hide();
     this.gameComplete.hide();
     this.activeChest = null;
+    // Show the boss-test shortcut only on levels that define a target.
+    this._setBossTestButtonVisible(!!level.bossTestSpawn);
     this.hud.setVisible(true);
     this.mobile.setGameplayEnabled(true);
   }
@@ -168,6 +172,42 @@ export class Game {
   _setPlayMenuButtonVisible(visible) {
     if (!this.playMenuBtn) return;
     this.playMenuBtn.style.display = visible ? 'flex' : 'none';
+  }
+
+  // Dev/testing shortcut: a button that jumps to the boss arena. Only shown on
+  // levels whose config provides a `bossTestSpawn`.
+  _createBossTestButton(uiRoot) {
+    this.bossTestBtn = document.createElement('button');
+    this.bossTestBtn.type = 'button';
+    this.bossTestBtn.id = 'boss-test-button';
+    this.bossTestBtn.textContent = 'Boss Test';
+    this.bossTestBtn.addEventListener('click', () => this.teleportToBossTest());
+    uiRoot.appendChild(this.bossTestBtn);
+    this._setBossTestButtonVisible(false);
+  }
+
+  _setBossTestButtonVisible(visible) {
+    if (!this.bossTestBtn) return;
+    this.bossTestBtn.style.display = visible ? 'flex' : 'none';
+  }
+
+  // Teleport the player just below the arena deck and re-arm the encounter so
+  // the one-way jump-through and fight trigger can be tested repeatedly.
+  teleportToBossTest() {
+    const target = this.currentLevel?.bossTestSpawn;
+    if (!target || !this.player) return;
+    if (!this.state.is(STATES.PLAYING) || this._transitioning) return;
+    // Lift like a normal respawn so we never spawn embedded in a platform.
+    this.player.respawn(target.x, target.y + WORLD.RESPAWN_LIFT);
+    this.player.godMode = !!this.debugFlags.godMode;
+    // Run the same retry-reset hooks respawn() uses: this re-arms the boss
+    // (DORMANT, full HP, fight + music re-triggered on landing) and resets
+    // surviving enemies/hazards, then clear any lingering boss projectiles.
+    this.entities.forEach(e => { if (e.onPlayerRespawn) e.onPlayerRespawn(); });
+    this.entities
+      .filter(e => e.tag === 'flame' || e.tag === 'impactWarning')
+      .forEach(e => this.entities.remove(e));
+    this.cameraFollow.snap();
   }
 
   _setPlayMenuButtonOpen(open) {
@@ -194,6 +234,7 @@ export class Game {
     this.menuTitle.show();
     this.mobile.setGameplayEnabled(false);
     this._setPlayMenuButtonOpen(true);
+    this._setBossTestButtonVisible(false);
   }
 
   closePlayMenu() {
@@ -204,6 +245,7 @@ export class Game {
     this.menuTitle.setStartLabel('START');
     this.mobile.setGameplayEnabled(true);
     this._setPlayMenuButtonOpen(false);
+    this._setBossTestButtonVisible(!!this.currentLevel?.bossTestSpawn);
   }
 
   // Triggered when the player enters a level's exit door. Plays a pixel fade,
@@ -254,6 +296,7 @@ export class Game {
     this.bossHud.hide();
     this.mobile.setGameplayEnabled(false);
     this._setPlayMenuButtonVisible(false);
+    this._setBossTestButtonVisible(false);
     this.gameComplete.show();
   }
 

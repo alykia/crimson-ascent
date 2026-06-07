@@ -121,12 +121,19 @@ const GROUNDFLOOR_SURFACE_Y_NORM = 0.41;
 const GROUNDFLOOR_SURFACE_W_NORM = 0.96;
 
 const BOSS_PLATFORM_ASPECT = 384 / 133;
-const BOSS_PLATFORM_SURFACE_Y_NORM = 0.81;
+// Normalized row (0=band bottom, 1=band top) of the deck's walkable top edge.
+// Measured from the sprite and nudged by in-game alignment so the player's feet
+// rest on the top stones without floating above or sinking into them.
+const BOSS_PLATFORM_SURFACE_Y_NORM = 0.65;
 
 export class Platform {
-  constructor({ x, y, w, h, spriteVariant = null, spriteFlipX = false, spriteSet = 'default' }) {
+  constructor({ x, y, w, h, spriteVariant = null, spriteFlipX = false, spriteSet = 'default', oneWay = false }) {
     this.tag = 'platform';
     this.solid = true;
+    // One-way (drop-through) deck: solid only when landed on from above. The
+    // collision rule lives in Physics.moveAndCollide; default platforms (false)
+    // are unaffected.
+    this.oneWay = !!oneWay;
     this.aabb = { x, y, w, h };
     this.mesh = new THREE.Group();
     this.mesh.position.set(x, y, 0);

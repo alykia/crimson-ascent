@@ -40,6 +40,8 @@ export class Physics {
     actor.aabb.x += actor.vel.x * dt;
     for (const s of solids) {
       if (s === actor) continue;
+      // One-way decks never block horizontally — you pass through their sides.
+      if (s.oneWay) continue;
       if (!this._overlap(actor.aabb, s.aabb)) continue;
       if (actor.vel.x > 0) {
         actor.aabb.x = s.aabb.x - s.aabb.w / 2 - actor.aabb.w / 2 - SKIN;
@@ -62,10 +64,18 @@ export class Physics {
     }
 
     // Y pass
+    const prevBottom = actor.aabb.y - actor.aabb.h / 2;
     actor.aabb.y += actor.vel.y * dt;
     for (const s of solids) {
       if (s === actor) continue;
       if (!this._overlap(actor.aabb, s.aabb)) continue;
+      // One-way decks only catch an actor that is descending AND was above the
+      // deck last frame. Moving up (or coming from below) passes straight
+      // through; this also means no underside/side block and no getting stuck.
+      if (s.oneWay) {
+        const top = s.aabb.y + s.aabb.h / 2;
+        if (!(actor.vel.y <= 0 && prevBottom >= top - SKIN)) continue;
+      }
       if (actor.vel.y > 0) {
         actor.aabb.y = s.aabb.y - s.aabb.h / 2 - actor.aabb.h / 2 - SKIN;
         flags.ceilingHit = true;

@@ -5,23 +5,32 @@ import { Physics } from '../systems/Physics.js';
 import { Flame } from './Flame.js';
 import { ImpactWarning } from './ImpactWarning.js';
 import { ChestReward } from './ChestReward.js';
+import dragonBossSpriteUrl from '../assets/T_DragonBoss_Sprite.png';
+import dragonFlyFrame0Url from '../assets/T_DragonBoss_new_Fly00.png';
+import dragonFlyFrame1Url from '../assets/T_DragonBoss_new_Fly01.png';
+import dragonFlyFrame2Url from '../assets/T_DragonBoss_new_Fly02.png';
+import dragonFlyFrame3Url from '../assets/T_DragonBoss_new_Fly03.png';
 
 // ---- SWAP-IN SLOT FOR A FINAL DRAGON SPRITE -----------------------------
-// No dragon art yet, so we draw a pixel-style placeholder on a canvas.
-// To use a real sprite later:
-//   import dragonUrl from '../assets/T_BossDragon_sprite.png';
-//   const bossDragonSprite = dragonUrl;
-const bossDragonSprite = null;
+const bossDragonSprite = dragonBossSpriteUrl;
 // -------------------------------------------------------------------------
+
+const DRAGON_VISUAL_Y_OFFSET = 0.45;
+const DASH_CONTACT_GRACE_MS = 220;
+
+function loadDragonTexture(url) {
+  const texture = new THREE.TextureLoader().load(url);
+  texture.magFilter = THREE.NearestFilter;
+  texture.minFilter = THREE.NearestFilter;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
 
 let dragonTexture = null;
 function getDragonTexture() {
   if (bossDragonSprite) {
     if (dragonTexture) return dragonTexture;
-    dragonTexture = new THREE.TextureLoader().load(bossDragonSprite);
-    dragonTexture.magFilter = THREE.NearestFilter;
-    dragonTexture.minFilter = THREE.NearestFilter;
-    dragonTexture.colorSpace = THREE.SRGBColorSpace;
+    dragonTexture = loadDragonTexture(bossDragonSprite);
     return dragonTexture;
   }
   if (dragonTexture) return dragonTexture;
@@ -72,6 +81,18 @@ function getDragonTexture() {
   return dragonTexture;
 }
 
+let dragonFlyTextures = null;
+function getDragonFlyTextures() {
+  if (dragonFlyTextures) return dragonFlyTextures;
+  dragonFlyTextures = [
+    dragonFlyFrame0Url,
+    dragonFlyFrame1Url,
+    dragonFlyFrame2Url,
+    dragonFlyFrame3Url,
+  ].map(loadDragonTexture);
+  return dragonFlyTextures;
+}
+
 const STATE = { DORMANT: 0, ACTIVE: 1, DEFEAT_FX: 2, DEFEATED: 3 };
 const DIVE = { NONE: 0, TELEGRAPH: 1, DIVING: 2, RECOVER: 3 };
 
@@ -108,13 +129,24 @@ export class Boss {
     this._flying = false;
     this._facing = -1;
 
+    // Fight gating: the dragon wakes only once the player actually stands on the
+    // arena deck's TOP surface (not when merely reaching this height, and not
+    // from the one-way deck's underside). `_fightStarted` makes the trigger and
+    // its music fire exactly once per attempt; it re-arms on respawn.
+    this._fightStarted = false;
+    this.playerOnBossPlatform = false;
+
     // Timers (ms)
     this._damageCdMs = 0;
     this._flameCdMs = BOSS.FLAME_COOLDOWN_MS;
     this._diveCdMs = BOSS.DIVE_COOLDOWN_MS;
+    this._dashContactGraceMs = 0;
     this._hurtMs = 0;
     this._fxMs = 0;
     this._t = 0;
+    this._flyFrameIndex = 0;
+    this._flyFrameTimerMs = 0;
+    this._flyFrameDurationMs = 130;
 
     // Dive sub-state
     this._dive = DIVE.NONE;
@@ -145,6 +177,17 @@ export class Boss {
   get _restY() { return this._arena.groundY + this.aabb.h / 2; }
   get _hoverY() { return this._arena.groundY + BOSS.FLY_HEIGHT; }
 
+  // True only when the player is standing ON the arena deck's top surface
+  // (grounded, feet level with arena.groundY, inside the arena's x-bounds).
+  _isPlayerOnTop(p) {
+    if (!p || !p.grounded) return false;
+    const feet = p.aabb.y - p.aabb.h / 2;
+    return feet >= this._arena.groundY - 0.15 &&
+           feet <= this._arena.groundY + 0.5 &&
+           p.aabb.x >= this._arena.minX &&
+           p.aabb.x <= this._arena.maxX;
+  }
+
   _timerScale() { return this._phase >= 3 ? BOSS.PHASE3_TIMER_SCALE : 1; }
 
   // ---- lifecycle ----
@@ -153,15 +196,21 @@ export class Boss {
     const dtMs = dt * 1000;
     this._t += dt;
     if (this._hurtMs > 0) this._hurtMs = Math.max(0, this._hurtMs - dtMs);
+    if (this._dashContactGraceMs > 0) {
+      this._dashContactGraceMs = Math.max(0, this._dashContactGraceMs - dtMs);
+    }
 
     if (this._state === STATE.DORMANT) {
-      // Visible and waiting; a gentle idle bob, no attacks. Triggers when the
-      // player climbs into the arena (same reveal pattern as Door.js).
-      const p = game.player;
-      if (p && p.aabb.y >= this._activateAtY) {
+      // Visible and waiting; no attacks or movement. The fight starts
+      // ONLY when the player is grounded on the arena deck's top surface and
+      // within the arena's horizontal bounds. Because the deck is one-way, the
+      // player can only be `grounded` on its top — passing through it from below
+      // (airborne) never satisfies this, so the side/underside can't trigger it.
+      this.playerOnBossPlatform = this._isPlayerOnTop(game.player);
+      if (!this._fightStarted && this.playerOnBossPlatform) {
         this._activate(game);
       } else {
-        this._syncMesh(Math.sin(this._t * 2) * 0.12);
+        this._syncMesh(0);
         return;
       }
     }
@@ -196,15 +245,20 @@ export class Boss {
 
     this._resolveCombat(game);
     this._updateTint();
+    this._updateSpriteAnimation(dtMs);
     this._syncMesh(0);
   }
 
   _activate(game) {
     this._state = STATE.ACTIVE;
+    this._fightStarted = true;
     if (game.bossHud) {
       game.bossHud.show();
       game.bossHud.setHealth(this.hp / this.maxHp);
     }
+    // Start the boss theme exactly when the fight begins (crossfades from the
+    // level track). The level's bossMusic config holds the path; no-op if unset.
+    game.audio?.startBoss?.(game.currentLevel?.bossMusic);
   }
 
   // ---- Phase 1: grounded ----
@@ -364,8 +418,15 @@ export class Boss {
 
     // Contact with the player.
     if (Physics.overlap(this.aabb, p.aabb)) {
-      const dashing = p.dashMsLeft > 0;
+      // Boss updates can run before Player.update consumes this frame's dash
+      // input. Treat a just-pressed, available dash as a dash hit too, otherwise
+      // pressing dash while already overlapping the boss could still damage the
+      // player for one frame.
+      const dashStartingThisFrame = !!game.input?.justPressed?.dash && p.canDash;
+      const dashing = p.dashMsLeft > 0 || dashStartingThisFrame;
       if (dashing) {
+        this._dashContactGraceMs = DASH_CONTACT_GRACE_MS;
+        p.dashInvulnMs = Math.max(p.dashInvulnMs || 0, PLAYER.DASH_INVULN_GRACE_MS);
         // Dash attack: damage the boss, refresh the player's dash, hit-pause.
         // The player takes NO contact damage on a dashing hit.
         if (this._damageCdMs <= 0) {
@@ -374,6 +435,11 @@ export class Boss {
           p.dashMsLeft = 0;
           game.freezePhysics(PLAYER.DASH_FREEZE_MS);
         }
+      } else if (this._dashContactGraceMs > 0) {
+        // The dash impact cancels the dash for feedback, but the large boss
+        // hitbox can still overlap for a few frames. Do not turn that into
+        // immediate contact damage.
+        return;
       } else {
         // Normal touch hurts the player (their i-frames prevent repeats).
         const fromDir = Math.sign(this.aabb.x - p.aabb.x) || 1;
@@ -407,6 +473,9 @@ export class Boss {
       game.entities.remove(e);
     }
     if (game.bossHud) game.bossHud.hide();
+    // Fade the boss theme to silence (the chest -> Game Complete flow follows;
+    // no level music returns at the summit).
+    game.audio?.endBoss?.({ resumeLevel: false });
   }
 
   _spawnChest(game) {
@@ -423,9 +492,33 @@ export class Boss {
     else this._mat.color.setHex(0xffffff);
   }
 
+  _setTexture(texture) {
+    if (this._mat.map === texture) return;
+    this._mat.map = texture;
+    this._mat.needsUpdate = true;
+  }
+
+  _updateSpriteAnimation(dtMs) {
+    if (!this._flying) {
+      this._flyFrameIndex = 0;
+      this._flyFrameTimerMs = 0;
+      this._setTexture(getDragonTexture());
+      return;
+    }
+
+    const textures = getDragonFlyTextures();
+    this._setTexture(textures[this._flyFrameIndex]);
+    this._flyFrameTimerMs += dtMs;
+    while (this._flyFrameTimerMs >= this._flyFrameDurationMs) {
+      this._flyFrameTimerMs -= this._flyFrameDurationMs;
+      this._flyFrameIndex = (this._flyFrameIndex + 1) % textures.length;
+      this._setTexture(textures[this._flyFrameIndex]);
+    }
+  }
+
   _syncMesh(bob) {
     this.mesh.position.x = this.aabb.x;
-    this.mesh.position.y = this.aabb.y + (bob || 0);
+    this.mesh.position.y = this.aabb.y + DRAGON_VISUAL_Y_OFFSET + (bob || 0);
     // Face the player by flipping the sprite horizontally.
     this.mesh.scale.x = BOSS.WIDTH * 1.6 * (this._facing >= 0 ? -1 : 1);
   }
@@ -433,6 +526,13 @@ export class Boss {
   // Reset for a retry — UNLESS already defeated (then the fight is over).
   onPlayerRespawn() {
     if (this._state === STATE.DEFEATED || this._state === STATE.DEFEAT_FX) return;
+
+    // Re-arm the fight: it starts again when the player next lands on the deck.
+    // Stop the boss theme and let the level track resume (the player may have
+    // respawned below the arena; if they respawn ON it the fight re-triggers).
+    this._game?.audio?.endBoss?.({ resumeLevel: true });
+    this._fightStarted = false;
+    this.playerOnBossPlatform = false;
 
     this._state = STATE.DORMANT;
     this._phase = 1;
@@ -445,12 +545,16 @@ export class Boss {
     this._damageCdMs = 0;
     this._flameCdMs = BOSS.FLAME_COOLDOWN_MS;
     this._diveCdMs = BOSS.DIVE_COOLDOWN_MS;
+    this._dashContactGraceMs = 0;
     this._dive = DIVE.NONE;
     this._diveWarning = null;
+    this._flyFrameIndex = 0;
+    this._flyFrameTimerMs = 0;
     this._hurtMs = 0;
     this._t = 0;
     this._mat.opacity = 1;
     this._mat.color.setHex(0xffffff);
+    this._setTexture(getDragonTexture());
     this.mesh.visible = true;
     this.mesh.scale.set(BOSS.WIDTH * 1.6, BOSS.HEIGHT * 1.6, 1);
     this._syncMesh(0);
