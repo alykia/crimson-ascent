@@ -3,6 +3,9 @@ export class MenuTitle {
     onStartGame,
     onOpenTutorial,
     onEnterZoo,
+    onOpenChallenge,
+    onOpenRanking,
+    onBackToMenu,
     onToggleSfxMute,
     onToggleMusicMute,
     onSetSfxVolume,
@@ -16,6 +19,9 @@ export class MenuTitle {
     this.onStartGame = onStartGame || (() => {});
     this.onOpenTutorial = onOpenTutorial || (() => {});
     this.onEnterZoo = onEnterZoo || (() => {});
+    this.onOpenChallenge = onOpenChallenge || (() => {});
+    this.onOpenRanking = onOpenRanking || (() => {});
+    this.onBackToMenu = onBackToMenu || (() => {});
     this.onToggleSfxMute = onToggleSfxMute || (() => {});
     this.onToggleMusicMute = onToggleMusicMute || (() => {});
     this.onSetSfxVolume = onSetSfxVolume || (() => {});
@@ -65,6 +71,34 @@ export class MenuTitle {
     this.startBtn = startBtn;
     buttonWrap.appendChild(startWrap);
 
+    // Challenge + Ranking: hidden until Challenge Mode is unlocked (see
+    // setChallengeUnlocked). The Challenge button carries a "NEW" badge the
+    // first time it appears.
+    const { container: challengeWrap, button: challengeBtn } = this._makeButton('CHALLENGE');
+    challengeBtn.addEventListener('click', () => this.onOpenChallenge());
+    this.challengeBadge = document.createElement('span');
+    this.challengeBadge.className = 'menu-badge-new';
+    this.challengeBadge.textContent = 'NEW';
+    this.challengeBadge.style.display = 'none';
+    challengeBtn.appendChild(this.challengeBadge);
+    this.challengeBtn = challengeBtn;
+    this.challengeBtnWrap = challengeWrap;
+    buttonWrap.appendChild(challengeWrap);
+
+    const { container: rankingWrap, button: rankingBtn } = this._makeButton('RANKING');
+    rankingBtn.addEventListener('click', () => this.onOpenRanking());
+    this.rankingBtn = rankingBtn;
+    this.rankingBtnWrap = rankingWrap;
+    buttonWrap.appendChild(rankingWrap);
+
+    // Shown only when the pause menu is opened during a Challenge run, to abandon
+    // the run and return to the main menu (see setBackToMenuVisible).
+    const { container: backWrap, button: backBtn } = this._makeButton('BACK TO MENU');
+    backBtn.addEventListener('click', () => this.onBackToMenu());
+    this.backToMenuBtn = backBtn;
+    this.backToMenuBtnWrap = backWrap;
+    buttonWrap.appendChild(backWrap);
+
     const { container: tutorialWrap, button: tutorialBtn } = this._makeButton('TUTORIAL');
     tutorialBtn.addEventListener('click', () => this.onOpenTutorial());
     buttonWrap.appendChild(tutorialWrap);
@@ -88,6 +122,8 @@ export class MenuTitle {
     uiRoot.appendChild(this.el);
 
     this.setZooEnabled(this.zooEnabled);
+    this.setChallengeUnlocked(false);
+    this.setBackToMenuVisible(false);
   }
 
   show() {
@@ -105,6 +141,24 @@ export class MenuTitle {
 
   setStartLabel(label) {
     this.startBtn.textContent = label;
+  }
+
+  // Shows/hides the Challenge + Ranking buttons (hidden until unlocked) and
+  // toggles the "NEW" badge on the Challenge button.
+  setChallengeUnlocked(unlocked, isNew = false) {
+    const display = unlocked ? 'block' : 'none';
+    if (this.challengeBtnWrap) this.challengeBtnWrap.style.display = display;
+    if (this.rankingBtnWrap) this.rankingBtnWrap.style.display = display;
+    if (this.challengeBadge) {
+      this.challengeBadge.style.display = unlocked && isNew ? 'inline-block' : 'none';
+    }
+  }
+
+  // Shows/hides the in-pause "Back to Menu" button (used during Challenge runs).
+  setBackToMenuVisible(visible) {
+    if (this.backToMenuBtnWrap) {
+      this.backToMenuBtnWrap.style.display = visible ? 'block' : 'none';
+    }
   }
 
   // ---- audio controls ----

@@ -215,6 +215,164 @@ html, body {
   gap: 10px;
 }
 
+/* ---- Challenge Mode ---- */
+/* Run timer: top-center, only visible during a challenge run. To reposition or
+   resize it, change the three variables below (size / X / Y). The MM:SS.cc
+   number format lives in ChallengeMode.formatTime. Kept small and centered so
+   it clears the health UI (top-left) and the boss/menu buttons (top-right). */
+#challenge-timer {
+  /* challengeTimerFontSize */
+  --challenge-timer-font-size: clamp(11px, 2.6vw, 15px);
+  /* challengeTimerPositionX (horizontal center of the timer) */
+  --challenge-timer-x: 50%;
+  /* challengeTimerPositionY (distance from the top, safe-area aware) */
+  --challenge-timer-y: max(8px, calc(var(--safe-top) + 8px));
+
+  position: absolute;
+  top: var(--challenge-timer-y);
+  left: var(--challenge-timer-x);
+  transform: translateX(-50%);
+  z-index: 15;
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #f4dede;
+  font: 400 var(--challenge-timer-font-size)/1 'Determination', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 8px rgba(181, 28, 50, 0.8), 0 1px 2px #000;
+  pointer-events: none;
+}
+
+/* Shared full-screen overlay for the challenge popups (mirrors #game-complete). */
+.challenge-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 26;
+  display: none;
+  place-items: center;
+  padding: max(16px, calc(var(--safe-top) + 12px)) max(14px, calc(var(--safe-right) + 14px)) max(16px, calc(var(--safe-bottom) + 12px)) max(14px, calc(var(--safe-left) + 14px));
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.92);
+  box-sizing: border-box;
+}
+
+.challenge-overlay.visible {
+  display: grid;
+}
+
+.challenge-complete-category {
+  margin: 0 0 6px;
+  color: #d8ad55;
+  font: 600 clamp(13px, 3.2vw, 16px)/1.3 'Determination', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.challenge-complete-newbest {
+  margin: 0 0 8px;
+  color: #ffe7a6;
+  font: 700 clamp(13px, 3.2vw, 17px)/1.2 'Determination', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(216, 173, 85, 0.7);
+}
+
+.challenge-complete-time,
+.challenge-complete-best {
+  margin: 0 0 4px;
+  color: #cfe2f6;
+  font: 500 clamp(13px, 3.2vw, 16px)/1.4 'Determination', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.challenge-complete-best {
+  margin-bottom: clamp(18px, 4.5vw, 26px);
+  color: #9fb6cf;
+}
+
+/* "NEW" badge anchored inside a .menu-btn (which is position: relative). */
+.menu-badge-new {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  padding: 1px 5px;
+  background: #b51c32;
+  color: #fff;
+  font: 700 clamp(8px, 1.8vw, 10px)/1 'Minecraft', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  letter-spacing: 0.1em;
+}
+
+.ranking-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 clamp(12px, 3vw, 18px);
+}
+
+.ranking-tab {
+  flex: 1 1 0;
+  min-height: clamp(28px, 6vw, 36px);
+  padding: 0 4px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 0;
+  background: #000;
+  color: #cdbb98;
+  font: 300 clamp(10px, 2.2vw, 13px) 'Determination', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.ranking-tab.is-active {
+  border-color: #fff;
+  color: #fff;
+  background: rgba(181, 28, 50, 0.32);
+}
+
+.ranking-list {
+  list-style: none;
+  margin: 0 0 clamp(18px, 4.5vw, 26px);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: clamp(120px, 30vw, 180px);
+}
+
+.ranking-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(4px, 1.2vw, 7px) clamp(8px, 2vw, 12px);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e9dcc4;
+  font: 500 clamp(12px, 2.8vw, 15px)/1 'Determination', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ranking-rank {
+  color: #d8ad55;
+}
+
+.ranking-time {
+  color: #f4eada;
+}
+
+.ranking-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(120px, 30vw, 180px);
+  color: #8fa6c0;
+  font: 500 clamp(12px, 3vw, 15px)/1.4 'Determination', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 #debug-overlay {
   position: absolute;
   top: max(8px, calc(var(--safe-top) + 8px));

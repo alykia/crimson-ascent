@@ -17,6 +17,12 @@ import { MenuTitle } from '../ui/MenuTitle.js';
 import { TutorialPopup } from '../ui/TutorialPopup.js';
 import { GameCompletePopup } from '../ui/GameCompletePopup.js';
 import { Transition } from '../ui/Transition.js';
+import { ChallengeMode } from '../systems/ChallengeMode.js';
+import { ChallengeTimer } from '../ui/ChallengeTimer.js';
+import { ChallengeSelectPopup } from '../ui/ChallengeSelectPopup.js';
+import { ChallengeCompletePopup } from '../ui/ChallengeCompletePopup.js';
+import { RankingPopup } from '../ui/RankingPopup.js';
+import { ConfirmPopup } from '../ui/ConfirmPopup.js';
 import { getLevelById, FIRST_LEVEL_ID } from '../config/levels.js';
 import { readRuntimeFlags } from '../config/runtimeFlags.js';
 import { WORLD, PLAYER } from '../config/constants.js';
@@ -52,7 +58,30 @@ export class Game {
     this.gameComplete = new GameCompletePopup(uiRoot, {
       onRestart: () => this._restartFromComplete(),
       onMenu: () => this._menuFromComplete(),
+      onChallenge: () => this.openChallengeSelect('complete'),
     });
+
+    // ---- Challenge Mode (timed runs + local leaderboard) ----
+    this.currentGameMode = 'normal'; // 'normal' | 'challenge'
+    this.challengeType = null; // 'level1' | 'level2' | 'all'
+    this.challenge = new ChallengeMode();
+    this.challengeTimer = new ChallengeTimer(uiRoot);
+    this.challengeSelect = new ChallengeSelectPopup(uiRoot, {
+      onSelect: (type) => this.startChallenge(type),
+      onBack: () => this._closeChallengeSelect(),
+    });
+    this.challengeComplete = new ChallengeCompletePopup(uiRoot, {
+      onRestart: () => this.restartChallenge(),
+      onMenu: () => this._menuFromChallenge(),
+    });
+    this.rankingPopup = new RankingPopup(uiRoot, {
+      onBack: () => this._closeRanking(),
+    });
+    this.confirmPopup = new ConfirmPopup(uiRoot);
+    // Where the selection popup returns to when Back is pressed ('menu' or
+    // 'complete'), set each time it is opened.
+    this._challengeBackTo = 'menu';
+
     this.runtimeFlags = readRuntimeFlags();
 
     this.player = null;
@@ -92,6 +121,9 @@ export class Game {
       onStartGame: () => this.requestStartCampaign(),
       onOpenTutorial: () => this.showTutorialFromMenu(),
       onEnterZoo: () => this.enterZoo(),
+      onOpenChallenge: () => this.openChallengeSelect('menu'),
+      onOpenRanking: () => this.openRanking(),
+      onBackToMenu: () => this._confirmExitChallenge(),
       sfxMuted: this.sfx.sfxMuted,
       sfxVolume: this.sfx.sfxVolume,
       musicMuted: this.audio.musicMuted,
@@ -115,16 +147,30 @@ export class Game {
 
   _gotoMenu() {
     this._playMenuOpen = false;
+    // Leaving any active challenge run: drop back to normal mode and stop/hide
+    // the timer so it never runs on the menu.
+    this.currentGameMode = 'normal';
+    this.challengeType = null;
+    this.challenge.end();
     this.state.set(STATES.MENU);
     this.audio.stop();
     this.menuTitle.setZooEnabled(this.runtimeFlags.zooEnabled);
     this.menuTitle.setStartLabel('START');
     this.menuTitle.show();
+    // Challenge + Ranking show on the main menu only once unlocked. The pause-only
+    // "Back to Menu" button is never shown on the actual main menu.
+    this.menuTitle.setChallengeUnlocked(ChallengeMode.isUnlocked(), ChallengeMode.isNew());
+    this.menuTitle.setBackToMenuVisible(false);
     this._setPlayMenuButtonVisible(false);
     this._setPlayMenuButtonOpen(false);
     this.tutorialPopup.hide();
     this.bossHud.hide();
     this.gameComplete.hide();
+    this.challengeTimer.hide();
+    this.challengeSelect.hide();
+    this.challengeComplete.hide();
+    this.rankingPopup.hide();
+    this.confirmPopup.hide();
     this.activeChest = null;
     this._setBossTestButtonVisible(false);
     this.hud.setVisible(false);
@@ -155,7 +201,30 @@ export class Game {
   }
 
   startCampaign() {
+    // Normal mode: ensure no challenge run/timer carries over.
+    this.currentGameMode = 'normal';
+    this.challengeType = null;
+    this.challenge.end();
+    this.challengeTimer.hide();
     this._setLevel(FIRST_LEVEL_ID);
+  }
+
+  // Starts a timed Challenge run of the given type ('level1' | 'level2' | 'all').
+  // Reuses the normal level configs; only the run timer + completion handling
+  // differ. The timer begins as soon as the level loads (PLAYING).
+  startChallenge(type) {
+    this.challengeSelect.hide();
+    this.gameComplete.hide();
+    this.menuTitle.hide();
+    this.challengeComplete.hide();
+    this.rankingPopup.hide();
+
+    this.currentGameMode = 'challenge';
+    this.challengeType = type;
+    this.challenge.begin(type);
+    this._setLevel(this.challenge.startLevelFor(type));
+    this.challengeTimer.setTime(0);
+    this.challengeTimer.show();
   }
 
   _createPlayMenuButton(uiRoot) {
@@ -232,6 +301,11 @@ export class Game {
     this.state.set(STATES.PAUSE);
     this.menuTitle.setStartLabel('RESTART');
     this.menuTitle.show();
+    // The pause overlay reuses the title menu; keep Challenge/Ranking off it so
+    // they only appear on the actual main menu. During a Challenge run, offer a
+    // "Back to Menu" button to abandon the run.
+    this.menuTitle.setChallengeUnlocked(false);
+    this.menuTitle.setBackToMenuVisible(this.currentGameMode === 'challenge');
     this.mobile.setGameplayEnabled(false);
     this._setPlayMenuButtonOpen(true);
     this._setBossTestButtonVisible(false);
@@ -243,6 +317,7 @@ export class Game {
     this.state.set(STATES.PLAYING);
     this.menuTitle.hide();
     this.menuTitle.setStartLabel('START');
+    this.menuTitle.setBackToMenuVisible(false);
     this.mobile.setGameplayEnabled(true);
     this._setPlayMenuButtonOpen(false);
     this._setBossTestButtonVisible(!!this.currentLevel?.bossTestSpawn);
@@ -254,6 +329,14 @@ export class Game {
   advanceLevel() {
     if (this._transitioning) return;
     if (!this.state.is(STATES.PLAYING)) return;
+
+    // Challenge: a Level 1 run finishes the instant the exit door is reached
+    // (it does not continue into Level 2). The All run keeps going (its
+    // nextLevelId is level2) and the timer keeps running across the transition.
+    if (this.currentGameMode === 'challenge' && this.challengeType === 'level1') {
+      this._completeChallenge();
+      return;
+    }
 
     const nextId = this.currentLevel?.nextLevelId || null;
     this._transitioning = true;
@@ -292,12 +375,105 @@ export class Game {
   // shows the Game Complete popup.
   onSwordCollected() {
     if (this.state.is(STATES.PAUSE)) return;
+
+    // Challenge runs (Level 2 / All) finish here instead of the normal Game
+    // Complete popup.
+    if (this.currentGameMode === 'challenge') {
+      this._completeChallenge();
+      return;
+    }
+
+    // Normal completion: this is the moment Challenge Mode unlocks.
+    ChallengeMode.markUnlocked();
     this.state.set(STATES.PAUSE);
     this.bossHud.hide();
     this.mobile.setGameplayEnabled(false);
     this._setPlayMenuButtonVisible(false);
     this._setBossTestButtonVisible(false);
+    this.gameComplete.setChallengeAvailable(ChallengeMode.isUnlocked(), ChallengeMode.isNew());
     this.gameComplete.show();
+  }
+
+  // Ends the active challenge run: records the time and shows the Challenge
+  // Complete popup. Mirrors onSwordCollected's UI teardown (pause + hide HUD).
+  _completeChallenge() {
+    if (this.state.is(STATES.PAUSE)) return;
+    const result = this.challenge.complete();
+    this.state.set(STATES.PAUSE);
+    this.bossHud.hide();
+    this.mobile.setGameplayEnabled(false);
+    this._setPlayMenuButtonVisible(false);
+    this._setBossTestButtonVisible(false);
+    this.challengeTimer.hide();
+    this.activeChest = null;
+    this.challengeComplete.show(result);
+  }
+
+  restartChallenge() {
+    this.challengeComplete.hide();
+    this.activeChest = null;
+    this.startChallenge(this.challengeType);
+  }
+
+  _menuFromChallenge() {
+    this.challengeComplete.hide();
+    this.activeChest = null;
+    this._gotoMenu();
+  }
+
+  // ---- Challenge selection + ranking popups ----
+
+  // Opens the Challenge selection popup. `from` ('menu' | 'complete') decides
+  // where Back returns. Opening it also clears the "NEW" badge.
+  openChallengeSelect(from) {
+    ChallengeMode.markSeen();
+    this.menuTitle.setChallengeUnlocked(ChallengeMode.isUnlocked(), false);
+    this.gameComplete.setChallengeAvailable(ChallengeMode.isUnlocked(), false);
+    this._challengeBackTo = from;
+    if (from === 'complete') {
+      this.gameComplete.hide();
+    } else {
+      this.menuTitle.hide();
+    }
+    this.challengeSelect.show({ onBack: () => this._closeChallengeSelect() });
+  }
+
+  _closeChallengeSelect() {
+    this.challengeSelect.hide();
+    if (this._challengeBackTo === 'complete') {
+      this.gameComplete.show();
+    } else {
+      this.menuTitle.show();
+    }
+  }
+
+  // From the in-Challenge pause menu: confirm before abandoning the run.
+  _confirmExitChallenge() {
+    this.confirmPopup.show({
+      message: 'Return to menu? Current challenge run will be lost.',
+      onYes: () => this._exitChallengeToMenu(),
+      onCancel: () => this.confirmPopup.hide(),
+    });
+  }
+
+  // Abandons the active challenge run and returns to the main menu. _gotoMenu
+  // resets challenge state (currentGameMode/challengeType + challenge.end()),
+  // stops and hides the timer, and stops music. No time is saved (only
+  // challenge.complete() records a time), so rankings are untouched and the mode
+  // stays unlocked.
+  _exitChallengeToMenu() {
+    this.confirmPopup.hide();
+    this._gotoMenu();
+  }
+
+  openRanking() {
+    this.menuTitle.hide();
+    this.rankingPopup.show({});
+  }
+
+  _closeRanking() {
+    this.rankingPopup.hide();
+    this.menuTitle.show();
   }
 
   _restartFromComplete() {
@@ -315,7 +491,13 @@ export class Game {
   requestStartCampaign() {
     if (this._playMenuOpen) {
       this._playMenuOpen = false;
-      this.startCampaign();
+      // RESTART from the in-play pause menu: in a challenge run, restart that
+      // same challenge (resets its timer); otherwise restart the campaign.
+      if (this.currentGameMode === 'challenge' && this.challengeType) {
+        this.startChallenge(this.challengeType);
+      } else {
+        this.startCampaign();
+      }
       return;
     }
 
@@ -343,6 +525,8 @@ export class Game {
           this.state.set(STATES.PAUSE);
           this.menuTitle.setStartLabel('RESTART');
           this.menuTitle.show();
+          this.menuTitle.setChallengeUnlocked(false);
+          this.menuTitle.setBackToMenuVisible(this.currentGameMode === 'challenge');
           this.hud.setVisible(true);
           this.mobile.setGameplayEnabled(false);
           this._setPlayMenuButtonVisible(true);
@@ -512,6 +696,14 @@ export class Game {
       // don't lose any presses across the pause.
       this.input.endFrame();
       return;
+    }
+
+    // Challenge run timer. Only advances here (live gameplay, after the
+    // pause/transition/freeze early-returns above), so it pauses on menus and
+    // transitions but keeps running across death/respawn.
+    if (this.currentGameMode === 'challenge' && this.challenge.active) {
+      this.challenge.tick(dt);
+      this.challengeTimer.setTime(this.challenge.elapsedMs);
     }
 
     this.entities.update(dt, this);

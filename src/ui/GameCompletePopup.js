@@ -2,9 +2,10 @@
 // tutorial look (see style.css #game-complete). Pauses gameplay while open and
 // offers Restart (Level 1) and Back to Menu. Works for mouse + touch.
 export class GameCompletePopup {
-  constructor(uiRoot, { onRestart, onMenu } = {}) {
+  constructor(uiRoot, { onRestart, onMenu, onChallenge } = {}) {
     this._onRestart = onRestart || (() => {});
     this._onMenu = onMenu || (() => {});
+    this._onChallenge = onChallenge || (() => {});
 
     this.el = document.createElement('div');
     this.el.id = 'game-complete';
@@ -28,6 +29,21 @@ export class GameCompletePopup {
 
     const actions = document.createElement('div');
     actions.className = 'game-complete-actions';
+
+    // Challenge button: hidden until Challenge Mode is unlocked (which happens
+    // the first time the game is completed). Carries a "NEW" badge on first view.
+    this.challengeBtn = document.createElement('button');
+    this.challengeBtn.type = 'button';
+    this.challengeBtn.className = 'menu-btn';
+    this.challengeBtn.textContent = 'CHALLENGE';
+    this.challengeBadge = document.createElement('span');
+    this.challengeBadge.className = 'menu-badge-new';
+    this.challengeBadge.textContent = 'NEW';
+    this.challengeBadge.style.display = 'none';
+    this.challengeBtn.appendChild(this.challengeBadge);
+    this.challengeBtn.addEventListener('click', () => this._onChallenge());
+    this.challengeBtn.style.display = 'none';
+    actions.appendChild(this.challengeBtn);
 
     this.restartBtn = document.createElement('button');
     this.restartBtn.type = 'button';
@@ -54,5 +70,11 @@ export class GameCompletePopup {
 
   hide() {
     this.el.classList.remove('visible');
+  }
+
+  // Shows/hides the Challenge button and its "NEW" badge.
+  setChallengeAvailable(unlocked, isNew = false) {
+    this.challengeBtn.style.display = unlocked ? 'flex' : 'none';
+    this.challengeBadge.style.display = unlocked && isNew ? 'inline-block' : 'none';
   }
 }
