@@ -44,8 +44,15 @@ export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Table that stores leaderboard rows (matches the SQL above).
 export const LEADERBOARD_TABLE = 'scores';
 
-// Top-N entries shown per ranking category. Change this to show more/fewer.
+// Top-N entries shown per ranking category. Change this single value to show
+// more/fewer ranked players.
 export const LEADERBOARD_LIMIT = 10;
+
+// How many rows to pull from the backend BEFORE collapsing to one best time per
+// player (dedup-on-display). Must be comfortably larger than LEADERBOARD_LIMIT
+// so duplicate rows for the same player can't push real players out of the top
+// list before dedup runs. Raise it if your table grows very large.
+export const LEADERBOARD_FETCH_LIMIT = 500;
 
 // Max characters allowed for a submitted player name.
 export const MAX_NAME_LENGTH = 12;

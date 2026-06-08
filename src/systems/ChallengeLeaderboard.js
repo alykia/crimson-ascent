@@ -1,13 +1,12 @@
 import { MAX_RANKING_ENTRIES, CHALLENGE_KEYS } from '../config/challenge.js';
+import { normalizeName } from './leaderboardService.js';
 
 // Local leaderboard backed by localStorage. This module is the single seam
-// between the game and where times are stored. To move to an online leaderboard
-// later, implement the network calls inside `submitChallengeTime` /
-// `fetchOnlineTimes` and leave the rest of the game untouched.
+// between the game and where times are stored locally (the offline fallback).
 //
-// Each stored entry is { timeMs, name, date }. `name` is null for now
-// (anonymous) — it exists so player names can be added later without changing
-// the storage shape (see the optional `name` argument below).
+// Each stored entry is { timeMs, name, date }. Names are matched per-player via
+// normalizeName (from leaderboardService) so the local store keeps a single
+// best time per player per category, mirroring the online behaviour.
 
 function storageKey(category) {
   return CHALLENGE_KEYS.times[category] || null;
@@ -36,18 +35,42 @@ export function getBestTime(category) {
   return times.length ? times[0].timeMs : null;
 }
 
-// Records a finished run locally: inserts the entry, sorts fastest-first, trims
-// to MAX_RANKING_ENTRIES, and persists. Returns { rank, isNewBest } where rank
-// is 1-based (or -1 if the time didn't make the table).
+// Records a finished run locally with one best time per player per category:
+//   - no existing entry for this player -> insert it          (status 'created')
+//   - existing entry and the new time is faster -> replace it (status 'improved')
+//   - existing entry and the new time is slower/equal -> keep (status 'kept')
+// Then sorts fastest-first, trims to MAX_RANKING_ENTRIES, and persists.
+// Returns { status, rank, isNewBest } (rank 1-based, or -1 if trimmed out).
 export function saveChallengeTime(category, timeMs, name = null) {
   const key = storageKey(category);
-  if (!key || !Number.isFinite(timeMs)) return { rank: -1, isNewBest: false };
+  if (!key || !Number.isFinite(timeMs)) {
+    return { status: 'kept', rank: -1, isNewBest: false };
+  }
 
-  const prevBest = getBestTime(category);
-  const entry = { timeMs: Math.round(timeMs), name: name ?? null, date: Date.now() };
-
+  const ms = Math.round(timeMs);
+  const norm = normalizeName(name ?? '');
   const times = getChallengeTimes(category);
-  times.push(entry);
+
+  // Find this player's existing entry (anonymous entries, norm === '', are
+  // matched together too).
+  const existingIdx = times.findIndex((e) => normalizeName(e.name ?? '') === norm);
+
+  let status;
+  let entry;
+  if (existingIdx === -1) {
+    entry = { timeMs: ms, name: name ?? null, date: Date.now() };
+    times.push(entry);
+    status = 'created';
+  } else if (ms < times[existingIdx].timeMs) {
+    entry = { timeMs: ms, name: name ?? null, date: Date.now() };
+    times[existingIdx] = entry;
+    status = 'improved';
+  } else {
+    // Slower or equal: keep the existing best, change nothing.
+    entry = times[existingIdx];
+    status = 'kept';
+  }
+
   times.sort((a, b) => a.timeMs - b.timeMs);
   const trimmed = times.slice(0, MAX_RANKING_ENTRIES);
 
@@ -58,8 +81,8 @@ export function saveChallengeTime(category, timeMs, name = null) {
   }
 
   const rank = trimmed.indexOf(entry) + 1; // 0 means trimmed out -> sentinel -1
-  const isNewBest = prevBest === null || entry.timeMs < prevBest;
-  return { rank: rank || -1, isNewBest };
+  const isNewBest = status !== 'kept' && trimmed.length > 0 && trimmed[0] === entry;
+  return { status, rank: rank || -1, isNewBest };
 }
 
 // Clears one category's ranking (handy for a future "reset times" button).

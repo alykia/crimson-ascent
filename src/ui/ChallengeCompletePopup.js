@@ -117,13 +117,20 @@ export class ChallengeCompletePopup {
     }
     if (result && result.ok) {
       this._submitted = true; // keep disabled — one submit per run
-      this._setStatus('Time submitted!', 'success');
+      this._setStatus(this._messageForStatus(result.status), 'success');
     } else {
       // Re-enable so the player can retry.
       this.submitBtn.disabled = false;
       this.nameInput.disabled = false;
       this._setStatus((result && result.error) || 'Could not submit. Please try again.', 'error');
     }
+  }
+
+  // Maps a successful submit's status to the message the player sees.
+  _messageForStatus(status) {
+    if (status === 'improved') return 'New best time submitted!';
+    if (status === 'kept') return 'You already have a better time on the leaderboard.';
+    return 'Time submitted!'; // 'created' (or unknown) -> first submission
   }
 
   _setStatus(text, kind) {
