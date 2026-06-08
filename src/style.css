@@ -191,6 +191,10 @@ html, body {
     0 24px 70px rgba(0, 0, 0, 0.6);
   box-sizing: border-box;
   text-align: center;
+  /* On short screens (e.g. with the mobile keyboard open) keep the panel
+     usable by scrolling its contents instead of overflowing the viewport. */
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 .game-complete-title {
@@ -292,6 +296,60 @@ html, body {
   color: #9fb6cf;
 }
 
+/* ---- Challenge Complete: leaderboard name entry ---- */
+.challenge-name-prompt {
+  margin: 0 0 8px;
+  color: #b9d5f3;
+  font: 500 clamp(12px, 3vw, 14px)/1.4 'Determination', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  letter-spacing: 0.06em;
+}
+
+.challenge-name-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 10px;
+  padding: clamp(8px, 2vw, 11px) 12px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 0;
+  background: #000;
+  color: #f4eada;
+  /* 16px minimum prevents iOS Safari from zooming when the field is focused. */
+  font: 400 16px 'Determination', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.challenge-name-input:focus {
+  outline: none;
+  border-color: #fff;
+  box-shadow: 0 0 10px rgba(119, 184, 255, 0.35);
+}
+
+.challenge-name-input:disabled {
+  opacity: 0.6;
+}
+
+.challenge-submit-btn {
+  margin-bottom: 8px;
+}
+
+.challenge-status {
+  min-height: 1.2em;
+  margin: 0 0 clamp(14px, 3.5vw, 20px);
+  color: #9fb6cf;
+  font: 500 clamp(11px, 2.8vw, 13px)/1.3 'Determination', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  letter-spacing: 0.06em;
+}
+
+.challenge-status.is-error {
+  color: #ff8a8a;
+}
+
+.challenge-status.is-success {
+  color: #9fe6a6;
+}
+
 /* "NEW" badge anchored inside a .menu-btn (which is position: relative). */
 .menu-badge-new {
   position: absolute;
@@ -355,11 +413,31 @@ html, body {
 }
 
 .ranking-rank {
+  flex: 0 0 auto;
+  margin-right: 8px;
   color: #d8ad55;
 }
 
+.ranking-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-right: 8px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .ranking-time {
+  flex: 0 0 auto;
   color: #f4eada;
+}
+
+.ranking-fallback {
+  margin: 0 0 10px;
+  color: #ffcf8a;
+  font: 500 clamp(11px, 2.6vw, 13px)/1.4 'Determination', ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  letter-spacing: 0.05em;
 }
 
 .ranking-empty {

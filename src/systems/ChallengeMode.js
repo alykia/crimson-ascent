@@ -1,5 +1,4 @@
 import { CHALLENGE_KEYS, CHALLENGE_START_LEVEL } from '../config/challenge.js';
-import { submitChallengeTime, getBestTime } from './ChallengeLeaderboard.js';
 
 // Challenge Mode run controller. Owns the run timer and the unlock / "new" flags.
 // Kept deliberately small and free of DOM/Game references so the timing logic
@@ -7,7 +6,7 @@ import { submitChallengeTime, getBestTime } from './ChallengeLeaderboard.js';
 export class ChallengeMode {
   constructor() {
     this.active = false; // a challenge run is in progress
-    this.type = null; // 'level1' | 'level2' | 'all'
+    this.type = null; // 'level1' | 'level2' | 'fullGame'
     this.elapsedMs = 0; // run time so far
     this.running = false; // timer is counting (false once an objective is met)
   }
@@ -42,14 +41,12 @@ export class ChallengeMode {
     this.running = false;
   }
 
-  // Finish the current run: stop the timer, record the time, and return the
-  // result for the completion popup.
+  // Finish the current run: stop the timer and return the result. The time is
+  // NOT saved here — saving happens only when the player clicks Submit Time on
+  // the completion popup (so they can name their score).
   complete() {
     this.running = false;
-    const type = this.type;
-    const timeMs = Math.round(this.elapsedMs);
-    const { isNewBest } = submitChallengeTime(type, timeMs);
-    return { type, timeMs, bestMs: getBestTime(type), isNewBest };
+    return { type: this.type, timeMs: Math.round(this.elapsedMs) };
   }
 
   // Which level config a given challenge type starts on.

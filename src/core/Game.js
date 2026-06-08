@@ -23,6 +23,7 @@ import { ChallengeSelectPopup } from '../ui/ChallengeSelectPopup.js';
 import { ChallengeCompletePopup } from '../ui/ChallengeCompletePopup.js';
 import { RankingPopup } from '../ui/RankingPopup.js';
 import { ConfirmPopup } from '../ui/ConfirmPopup.js';
+import * as leaderboardService from '../systems/leaderboardService.js';
 import { getLevelById, FIRST_LEVEL_ID } from '../config/levels.js';
 import { readRuntimeFlags } from '../config/runtimeFlags.js';
 import { WORLD, PLAYER } from '../config/constants.js';
@@ -63,7 +64,7 @@ export class Game {
 
     // ---- Challenge Mode (timed runs + local leaderboard) ----
     this.currentGameMode = 'normal'; // 'normal' | 'challenge'
-    this.challengeType = null; // 'level1' | 'level2' | 'all'
+    this.challengeType = null; // 'level1' | 'level2' | 'fullGame'
     this.challenge = new ChallengeMode();
     this.challengeTimer = new ChallengeTimer(uiRoot);
     this.challengeSelect = new ChallengeSelectPopup(uiRoot, {
@@ -73,7 +74,11 @@ export class Game {
     this.challengeComplete = new ChallengeCompletePopup(uiRoot, {
       onRestart: () => this.restartChallenge(),
       onMenu: () => this._menuFromChallenge(),
+      onSubmit: (name) => this._submitChallengeScore(name),
     });
+    // The finished-but-not-yet-submitted run, set in _completeChallenge and
+    // cleared when leaving the popup. { type, timeMs } or null.
+    this._pendingChallengeResult = null;
     this.rankingPopup = new RankingPopup(uiRoot, {
       onBack: () => this._closeRanking(),
     });
@@ -209,7 +214,7 @@ export class Game {
     this._setLevel(FIRST_LEVEL_ID);
   }
 
-  // Starts a timed Challenge run of the given type ('level1' | 'level2' | 'all').
+  // Starts a timed Challenge run of the given type ('level1' | 'level2' | 'fullGame').
   // Reuses the normal level configs; only the run timer + completion handling
   // differ. The timer begins as soon as the level loads (PLAYING).
   startChallenge(type) {
@@ -331,7 +336,7 @@ export class Game {
     if (!this.state.is(STATES.PLAYING)) return;
 
     // Challenge: a Level 1 run finishes the instant the exit door is reached
-    // (it does not continue into Level 2). The All run keeps going (its
+    // (it does not continue into Level 2). The Full Game run keeps going (its
     // nextLevelId is level2) and the timer keeps running across the transition.
     if (this.currentGameMode === 'challenge' && this.challengeType === 'level1') {
       this._completeChallenge();
@@ -376,7 +381,7 @@ export class Game {
   onSwordCollected() {
     if (this.state.is(STATES.PAUSE)) return;
 
-    // Challenge runs (Level 2 / All) finish here instead of the normal Game
+    // Challenge runs (Level 2 / Full Game) finish here instead of the normal Game
     // Complete popup.
     if (this.currentGameMode === 'challenge') {
       this._completeChallenge();
@@ -398,7 +403,8 @@ export class Game {
   // Complete popup. Mirrors onSwordCollected's UI teardown (pause + hide HUD).
   _completeChallenge() {
     if (this.state.is(STATES.PAUSE)) return;
-    const result = this.challenge.complete();
+    const result = this.challenge.complete(); // { type, timeMs } — not saved yet
+    this._pendingChallengeResult = result;
     this.state.set(STATES.PAUSE);
     this.bossHud.hide();
     this.mobile.setGameplayEnabled(false);
@@ -406,17 +412,34 @@ export class Game {
     this._setBossTestButtonVisible(false);
     this.challengeTimer.hide();
     this.activeChest = null;
-    this.challengeComplete.show(result);
+    this.challengeComplete.show({
+      type: result.type,
+      timeMs: result.timeMs,
+      bestMs: leaderboardService.getLocalBest(result.type),
+    });
+  }
+
+  // Submits the pending run's time under the given name. Returns the service's
+  // { ok, online, error } promise so the popup can show status. Guards if there
+  // is no pending run.
+  _submitChallengeScore(name) {
+    const pending = this._pendingChallengeResult;
+    if (!pending) {
+      return Promise.resolve({ ok: false, online: false, error: 'No run to submit.' });
+    }
+    return leaderboardService.submitScore(pending.type, name, pending.timeMs);
   }
 
   restartChallenge() {
     this.challengeComplete.hide();
+    this._pendingChallengeResult = null;
     this.activeChest = null;
     this.startChallenge(this.challengeType);
   }
 
   _menuFromChallenge() {
     this.challengeComplete.hide();
+    this._pendingChallengeResult = null;
     this.activeChest = null;
     this._gotoMenu();
   }

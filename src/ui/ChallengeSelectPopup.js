@@ -1,7 +1,7 @@
-import { CHALLENGE_INTRO_TEXT } from '../config/challenge.js';
+import { CHALLENGE_INTRO_TEXT, CHALLENGE_LABELS } from '../config/challenge.js';
 
 // Challenge Mode selection popup. Explains the mode and offers Level 1 / Level 2
-// / All plus Back. Reused from both the main menu and the Game Complete popup;
+// / Full Game plus Back. Reused from both the main menu and the Game Complete popup;
 // the caller passes an onBack handler (via show) so Back returns to the right
 // place. Matches the Game Complete look (.game-complete-panel / .menu-btn).
 export class ChallengeSelectPopup {
@@ -32,9 +32,9 @@ export class ChallengeSelectPopup {
 
     const actions = document.createElement('div');
     actions.className = 'game-complete-actions';
-    actions.appendChild(this._makeBtn('LEVEL 1', () => this._onSelect('level1')));
-    actions.appendChild(this._makeBtn('LEVEL 2', () => this._onSelect('level2')));
-    actions.appendChild(this._makeBtn('ALL', () => this._onSelect('all')));
+    actions.appendChild(this._makeBtn(CHALLENGE_LABELS.level1.toUpperCase(), () => this._onSelect('level1')));
+    actions.appendChild(this._makeBtn(CHALLENGE_LABELS.level2.toUpperCase(), () => this._onSelect('level2')));
+    actions.appendChild(this._makeBtn(CHALLENGE_LABELS.fullGame.toUpperCase(), () => this._onSelect('fullGame')));
     actions.appendChild(this._makeBtn('BACK', () => this._onBack()));
     panel.appendChild(actions);
 
