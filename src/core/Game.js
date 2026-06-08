@@ -698,6 +698,27 @@ export class Game {
     }
   }
 
+  // Challenge runs are armed at 00:00 and only begin counting once the player
+  // actually uses a gameplay control. This avoids time loss while reading the
+  // level immediately after selecting a challenge.
+  _hasChallengeStartInput() {
+    const input = this.input;
+    if (!input) return false;
+    const movementHeld =
+      !!input.held?.left ||
+      !!input.held?.right ||
+      !!input.held?.up ||
+      !!input.held?.down;
+    const actionPressed =
+      !!input.justPressed?.jump ||
+      !!input.justPressed?.dash ||
+      !!input.justPressed?.shoot;
+    const analogMoved =
+      Math.abs(input.axis?.moveX ?? 0) > 0.05 ||
+      Math.abs(input.axis?.moveY ?? 0) > 0.05;
+    return movementHeld || actionPressed || analogMoved;
+  }
+
   update(dt) {
     if (this.state.is(STATES.MENU) || this.state.is(STATES.TUTORIAL)) {
       this.input.endFrame();
@@ -729,6 +750,9 @@ export class Game {
     // pause/transition/freeze early-returns above), so it pauses on menus and
     // transitions but keeps running across death/respawn.
     if (this.currentGameMode === 'challenge' && this.challenge.active) {
+      if (!this.challenge.running && this._hasChallengeStartInput()) {
+        this.challenge.start();
+      }
       this.challenge.tick(dt);
       this.challengeTimer.setTime(this.challenge.elapsedMs);
     }

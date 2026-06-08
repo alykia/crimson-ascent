@@ -11,11 +11,18 @@ export class ChallengeMode {
     this.running = false; // timer is counting (false once an objective is met)
   }
 
-  // Begin a fresh run of the given type. Resets the timer to zero.
+  // Begin a fresh run of the given type. Resets the timer to zero, but leaves it
+  // armed instead of counting; Game starts it on the first gameplay input.
   begin(type) {
     this.active = true;
     this.type = type;
     this.elapsedMs = 0;
+    this.running = false;
+  }
+
+  // Starts counting after the player makes their first movement/action input.
+  start() {
+    if (!this.active) return;
     this.running = true;
   }
 
