@@ -91,7 +91,21 @@ export class Input {
     this.justReleased[action] = true;
   }
 
+  // Let regular form fields receive normal typing. Without this, gameplay keys
+  // such as K / L / X call preventDefault() and never appear in name inputs.
+  _isTypingTarget(target) {
+    if (!target) return false;
+    const tag = target.tagName;
+    return (
+      target.isContentEditable ||
+      tag === 'INPUT' ||
+      tag === 'TEXTAREA' ||
+      tag === 'SELECT'
+    );
+  }
+
   _onKeyDown(e) {
+    if (this._isTypingTarget(e.target)) return;
     const map = KEYMAP[e.code];
     if (!map) return;
     e.preventDefault();
@@ -100,6 +114,7 @@ export class Input {
   }
 
   _onKeyUp(e) {
+    if (this._isTypingTarget(e.target)) return;
     const map = KEYMAP[e.code];
     if (!map) return;
     this._release(map.action);
