@@ -6,7 +6,7 @@ import arrowSpriteUrl from '../assets/T_ArrowShoot_Sprite.png';
 
 let arrowTexture = null;
 const PLAYER_ARROW_SCALE = { x: 1.25, y: 0.4 };
-const ENEMY_ARROW_SCALE = { x: 1.05, y: 0.78 };
+const ENEMY_ARROW_SCALE = { x: 0.86, y: 0.92 };
 
 function getArrowTexture() {
   if (arrowTexture) return arrowTexture;
