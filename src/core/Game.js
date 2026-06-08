@@ -302,10 +302,10 @@ export class Game {
     this.menuTitle.setStartLabel('RESTART');
     this.menuTitle.show();
     // The pause overlay reuses the title menu; keep Challenge/Ranking off it so
-    // they only appear on the actual main menu. During a Challenge run, offer a
-    // "Back to Menu" button to abandon the run.
+    // they only appear on the actual main menu. Offer a "Back to Menu" button to
+    // abandon the current run (normal campaign or Challenge).
     this.menuTitle.setChallengeUnlocked(false);
-    this.menuTitle.setBackToMenuVisible(this.currentGameMode === 'challenge');
+    this.menuTitle.setBackToMenuVisible(true);
     this.mobile.setGameplayEnabled(false);
     this._setPlayMenuButtonOpen(true);
     this._setBossTestButtonVisible(false);
@@ -447,18 +447,22 @@ export class Game {
     }
   }
 
-  // From the in-Challenge pause menu: confirm before abandoning the run.
+  // From the in-game pause menu: confirm before abandoning the current run.
+  // Works for both the normal campaign and Challenge runs.
   _confirmExitChallenge() {
+    const message = this.currentGameMode === 'challenge'
+      ? 'Return to menu? Current challenge run will be lost.'
+      : 'Return to menu? Current progress will be lost.';
     this.confirmPopup.show({
-      message: 'Return to menu? Current challenge run will be lost.',
+      message,
       onYes: () => this._exitChallengeToMenu(),
       onCancel: () => this.confirmPopup.hide(),
     });
   }
 
-  // Abandons the active challenge run and returns to the main menu. _gotoMenu
-  // resets challenge state (currentGameMode/challengeType + challenge.end()),
-  // stops and hides the timer, and stops music. No time is saved (only
+  // Abandons the current run and returns to the main menu. _gotoMenu resets
+  // challenge state (currentGameMode/challengeType + challenge.end()), stops and
+  // hides the timer, and stops music. No challenge time is saved (only
   // challenge.complete() records a time), so rankings are untouched and the mode
   // stays unlocked.
   _exitChallengeToMenu() {
@@ -526,7 +530,7 @@ export class Game {
           this.menuTitle.setStartLabel('RESTART');
           this.menuTitle.show();
           this.menuTitle.setChallengeUnlocked(false);
-          this.menuTitle.setBackToMenuVisible(this.currentGameMode === 'challenge');
+          this.menuTitle.setBackToMenuVisible(true);
           this.hud.setVisible(true);
           this.mobile.setGameplayEnabled(false);
           this._setPlayMenuButtonVisible(true);

@@ -5,6 +5,8 @@ import { Physics } from '../systems/Physics.js';
 import arrowSpriteUrl from '../assets/T_ArrowShoot_Sprite.png';
 
 let arrowTexture = null;
+const PLAYER_ARROW_SCALE = { x: 1.25, y: 0.4 };
+const ENEMY_ARROW_SCALE = { x: 1.3, y: 0.62 };
 
 function getArrowTexture() {
   if (arrowTexture) return arrowTexture;
@@ -38,7 +40,8 @@ export class Arrow {
       depthWrite: false,
     });
     this.mesh = new THREE.Sprite(this._material);
-    this.mesh.scale.set(1.25, 0.4, 1);
+    const visualScale = source === 'enemy' ? ENEMY_ARROW_SCALE : PLAYER_ARROW_SCALE;
+    this.mesh.scale.set(visualScale.x, visualScale.y, 1);
     this.mesh.position.set(x, y, 0.45);
     this._material.rotation = Math.atan2(vy, vx);
   }
