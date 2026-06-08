@@ -35,10 +35,11 @@
 //      and confirm it shows up in the Ranking screen from another device.
 
 // Paste your Supabase Project URL here, e.g. 'https://abcd1234.supabase.co'
-export const SUPABASE_URL = '';
+// NOTE: base project URL only — the service appends '/rest/v1/<table>' itself.
+export const SUPABASE_URL = 'https://unkwgnnzomocqugdgclg.supabase.co';
 
 // Paste your Supabase anon/public key here (NOT the service_role key).
-export const SUPABASE_ANON_KEY = '';
+export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVua3dnbm56b21vY3F1Z2RnY2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MTY1NjksImV4cCI6MjA5NjQ5MjU2OX0.WNhk54IrqHmEglu8DCC38OogueL4ms9wXw0n_j9YELI';
 
 // Table that stores leaderboard rows (matches the SQL above).
 export const LEADERBOARD_TABLE = 'scores';
