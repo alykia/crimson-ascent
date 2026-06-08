@@ -22,7 +22,7 @@
 //     and enemies, raise chimney height.
 
 import backgroundLevel2Url from '../assets/T_Background2_sprite.png';
-import level2MusicUrl from '../assets/audio/music/gothic_torque.mp3';
+import level2MusicUrl from '../assets/audio/music/stained_glass_groove.mp3';
 import bossMusicUrl from '../assets/audio/music/cursed_riffblood.mp3';
 
 const FLOOR_Y   = -1;
@@ -42,7 +42,7 @@ export const LEVEL_TWO = {
   // Replace this import/path later if you provide another final Level 2 PNG.
   background: { url: backgroundLevel2Url, aspect: 576 / 1024 },
 
-  // ---- Music: "Gothic Torque" (looping). Swap the imported file to change it. ----
+  // ---- Music: "Stained Glass Groove" (looping). Swap the imported file to change it. ----
   music: { url: level2MusicUrl, volume: 1.0 },
 
   // ---- Boss theme: "Cursed Riffblood" (looping). Plays only during the boss
