@@ -42,9 +42,9 @@ export class TutorialPopup {
       'Shoot Arrow: K or X',
     ]));
     content.appendChild(this._makeSection('GAMEPLAY TIPS', [
+      'Dashing into enemies deals damages.',
       'In air dashing can be followed by a jump.',
       'Use wall jumps carefully.',
-      'Plan your route before committing.',
       'Checkpoints restore your progress after death.',
     ]));
     panel.appendChild(content);
